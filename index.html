@@ -31,7 +31,6 @@ h1 {
   margin-bottom:35px;
 }
 
-/* 카드 */
 .card {
   background:white;
   color:#222;
@@ -54,12 +53,11 @@ input {
   background:#1f1f1f;
   color:white;
   border:none;
-
   text-align:center;
   font-weight:800;
 }
 
-/* 추천 박스 */
+/* 자동추천 */
 .suggest-box {
   position:absolute;
   top:70px;
@@ -68,15 +66,13 @@ input {
   background:#222;
   border-radius:10px;
   display:none;
-  overflow:hidden;
   z-index:10;
 }
 
-/* ⭐ 핵심 수정: 흰색 */
 .suggest-box div {
   padding:12px;
   cursor:pointer;
-  color:white;
+  color:white; /* ✔ 완전 흰색 */
 }
 
 .suggest-box div:hover {
@@ -104,9 +100,7 @@ button {
   margin-right:8px;
 }
 
-.low { background:#22c55e; }
 .mid { background:#facc15; color:black; }
-.high { background:#ef4444; }
 
 /* meter */
 .meter {
@@ -119,8 +113,22 @@ button {
 
 .bar {
   height:100%;
-  transition:0.5s;
   background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
+}
+
+/* 뉴스 */
+.news {
+  margin-top:20px;
+  padding:20px;
+  border-left:6px solid #2563eb;
+  background:#eef5ff;
+  border-radius:10px;
+}
+
+/* ⭐ 중요 파란색 */
+.important {
+  color:#2563eb;
+  font-weight:900;
 }
 
 /* 섹션 */
@@ -132,46 +140,11 @@ button {
   border-radius:10px;
 }
 
-/* 🧠 중요 파란 강조 */
-.important {
-  color:#2563eb;
-  font-weight:900;
-}
-
-/* ⭐ 별 강조 */
+/* ⭐ 노란 별 */
 .star {
   color:#facc15;
   font-weight:bold;
-}
-
-/* 뉴스 (최상위 핵심) */
-.news {
-  border-left:6px solid #2563eb;
-  background:#eef5ff;
-  padding:20px;
-  border-radius:10px;
-  margin-top:20px;
-}
-
-/* no data */
-.no-data {
-  background:#1f1f1f;
-  border:2px solid #ff4d4d;
-  padding:30px;
-  border-radius:18px;
-  text-align:center;
-}
-
-.no-data .title {
-  font-size:22px;
-  font-weight:bold;
-  color:#ff4d4d;
-}
-
-.no-data .desc {
-  color:#ffb4a2;
-  font-size:15px;
-  margin-top:6px;
+  margin-left:6px;
 }
 
 </style>
@@ -203,7 +176,7 @@ onblur="hideSuggest()">
 
 <script>
 
-/* ================= 추천 ================= */
+/* ================= 자동 추천 ================= */
 function suggest(v){
   const box = document.getElementById("suggestBox");
 
@@ -231,7 +204,7 @@ function select(v){
   document.getElementById("suggestBox").style.display="none";
 }
 
-/* ⭐ 핵심 수정: 다른 클릭 시 자동 숨김 */
+/* ✔ 다른 클릭 시 자동 종료 */
 function hideSuggest(){
   setTimeout(()=>{
     document.getElementById("suggestBox").style.display="none";
@@ -243,20 +216,17 @@ function score(){
   return Math.floor(Math.random()*40 + 60);
 }
 
-/* 📰 화제성 (최상위 중요 섹션) */
+/* 뉴스 */
 function news(keyword){
   return `
   <div class="news">
     <h3>📰 인터넷 화제성 분석 ★</h3>
 
-    <p><span class="important">${keyword}</span>는 현재  
-    <span class="important">SNS / 유튜브 / 뉴스</span> 전반에서  
-    <b>급격한 언급 증가</b>가 나타나는 키워드입니다 ⭐</p>
+    <p><span class="important">${keyword}</span>는 SNS / 유튜브 / 뉴스에서  
+    <b class="important">급격한 언급 증가</b><span class="star">★</span></p>
 
-    <p>특히 <span class="important">짧은 영상 콘텐츠</span> 중심으로 확산되며  
-    <b>트렌드 상위권 진입 가능성</b>이 높습니다 ⭐</p>
-
-    <p><b>핵심 요약:</b> <span class="important">현재 화제성 상승 구간</span> ⭐</p>
+    <p>짧은 영상 중심으로 확산 중이며  
+    <b class="important">트렌드 상위 진입 가능성 높음</b><span class="star">★</span></p>
   </div>
   `;
 }
@@ -267,9 +237,9 @@ function analyze(){
 const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
-const result = document.getElementById("result");
-
 const s = score();
+
+const result = document.getElementById("result");
 
 result.innerHTML = `
 <h2>🔍 <b>${keyword}</b></h2>
@@ -279,28 +249,21 @@ result.innerHTML = `
 <div class="meter">
 <div class="bar" style="width:${s}%"></div>
 </div>
-`;
 
-/* 📰 핵심 화제성 */
-result.innerHTML += news(keyword);
+${news(keyword)}
 
-/* 관심 */
-result.innerHTML += `
 <div class="section">
-<h3>👥 핵심 관심 ⭐</h3>
+<h3>👥 핵심 관심<span class="star">★</span></h3>
 <b class="important">• ${keyword} 활용 방법</b><br>
 <b class="important">• 수익 구조 분석</b><br>
-<b class="important">• 시장 확장성</b><br>
+<b class="important">• 시장 전망</b><br>
 </div>
-`;
 
-/* 질문 */
-result.innerHTML += `
 <div class="section">
-<h3>❓ 사람들이 궁금해하는 것 ⭐</h3>
+<h3>❓ 질문<span class="star">★</span></h3>
 <b class="important">• 지금 시작해도 될까?</b><br>
 <b class="important">• 돈이 될까?</b><br>
-<b class="important">• 경쟁이 심한가?</b><br>
+<b class="important">• 경쟁은 어떤가?</b><br>
 </div>
 `;
 
