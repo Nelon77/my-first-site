@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>🧐 AI 트렌드 분석기</title>
 
 <link rel="stylesheet"
@@ -10,83 +11,95 @@ href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretend
 
 <style>
 
+/* 🌑 전체 확대 (핵심) */
 body {
   margin:0;
   background:#121212;
   color:white;
   font-family:Pretendard;
+  font-size:18px;
 }
 
+/* 컨테이너 더 크게 */
 .container {
-  max-width:900px;
-  margin:50px auto;
-  padding:20px;
+  max-width:1100px;
+  margin:70px auto;
+  padding:30px;
 }
 
 h1 {
   text-align:center;
-  font-size:2.2rem;
+  font-size:2.6rem;
+  margin-bottom:30px;
 }
 
+/* 카드 크게 */
 .card {
   background:white;
   color:#222;
-  padding:30px;
-  border-radius:20px;
+  padding:40px;
+  border-radius:25px;
 }
 
-/* 입력 */
+/* 입력 영역 */
 .search-box {
   display:flex;
-  gap:10px;
+  gap:15px;
 }
 
 input {
   flex:1;
-  padding:15px;
-  border-radius:10px;
+  padding:18px;
+  font-size:18px;
+  border-radius:12px;
   background:#1f1f1f;
   color:white;
   border:none;
 }
 
-/* 버튼 */
+/* 버튼 크게 */
 button {
-  padding:15px;
+  padding:18px 28px;
+  font-size:18px;
   background:#2563eb;
   color:white;
   border:none;
-  border-radius:10px;
+  border-radius:12px;
   cursor:pointer;
-  transition:0.15s;
 }
 
 button:active {
   transform:scale(0.95);
 }
 
+/* 결과 */
+#result {
+  margin-top:30px;
+  font-size:18px;
+}
+
 /* 배지 */
 .badge {
   display:inline-block;
-  padding:6px 10px;
-  border-radius:8px;
+  padding:8px 12px;
+  border-radius:10px;
   color:white;
   font-weight:bold;
-  margin-right:6px;
+  margin-right:8px;
 }
 
-/* 경쟁도 색상 */
-.low { background:#22c55e; }   /* 낮음 = 초록 */
-.mid { background:#facc15; color:black; } /* 중간 = 노랑 */
-.high { background:#ef4444; }  /* 높음 = 빨강 */
+/* 경쟁 색 */
+.low { background:#22c55e; }
+.mid { background:#facc15; color:black; }
+.high { background:#ef4444; }
 
-/* 점수 바 */
+/* meter */
 .meter {
-  height:10px;
+  height:14px;
   background:#ddd;
   border-radius:10px;
   overflow:hidden;
-  margin-top:10px;
+  margin-top:12px;
 }
 
 .bar {
@@ -95,24 +108,37 @@ button:active {
   background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
 }
 
-/* ⚠️ 데이터 부족 */
+/* ⚠️ 데이터 부족 카드 */
 .no-data {
   background:#1f1f1f;
-  border:1px solid #ff4d4d;
-  padding:20px;
-  border-radius:15px;
+  border:2px solid #ff4d4d;
+  padding:25px;
+  border-radius:18px;
   text-align:center;
 }
 
+.no-data .icon {
+  font-size:32px;
+}
+
 .no-data .title {
-  font-size:18px;
+  font-size:20px;
   font-weight:bold;
+  color:#ff4d4d; /* 🔥 핵심: 주황/빨강 강조 */
+  margin-top:8px;
 }
 
 .no-data .desc {
-  color:#aaa;
-  font-size:13px;
-  margin-top:5px;
+  color:#ffb4a2; /* 🔥 기존 회색 → 따뜻한 주황 */
+  font-size:15px;
+  margin-top:6px;
+}
+
+/* 구분선 */
+hr {
+  border:none;
+  border-top:1px solid #ddd;
+  margin:25px 0;
 }
 
 </style>
@@ -142,16 +168,10 @@ function scoreGen() {
   return Math.floor(Math.random()*40 + 60);
 }
 
-function getLevel(score) {
+function level(score) {
   if(score < 70) return "low";
   if(score < 85) return "mid";
   return "high";
-}
-
-function getText(level) {
-  if(level === "low") return "경쟁 낮음";
-  if(level === "mid") return "경쟁 중간";
-  return "경쟁 매우 높음";
 }
 
 function analyze() {
@@ -160,17 +180,48 @@ const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
 const score = scoreGen();
-const level = getLevel(score);
+const lv = level(score);
 
 let result = "";
 
-if(keyword.includes("AI")) {
+/* 🔥 원룸 복구 + 확장 */
+if(keyword.includes("원룸")) {
 
 result = `
 <h2>🔍 ${keyword}</h2>
 
-<span class="badge ${level}">${getText(level)}</span>
-<span class="badge ${level}">🔥 ${score}점</span>
+<span class="badge ${lv}">경쟁 ${lv === "low" ? "낮음" : lv === "mid" ? "중간" : "높음"}</span>
+<span class="badge ${lv}">🔥 ${score}점</span>
+
+<div class="meter">
+<div class="bar" style="width:${score}%"></div>
+</div>
+
+<hr>
+
+<h3>👥 핵심 관심</h3>
+• 원룸 인테리어<br>
+• 좁은 공간 활용<br>
+• 가성비 가구 추천<br>
+
+<hr>
+
+<h3>❓ 질문</h3>
+• 10만원으로 꾸밀 수 있을까?<br>
+• 수납 어떻게 하지?<br>
+• 좁은 방 넓어 보이게 하는 법?<br>
+`;
+
+}
+
+/* AI */
+else if(keyword.includes("AI")) {
+
+result = `
+<h2>🔍 ${keyword}</h2>
+
+<span class="badge ${lv}">경쟁 ${lv === "low" ? "낮음" : lv === "mid" ? "중간" : "높음"}</span>
+<span class="badge ${lv}">🔥 ${score}점</span>
 
 <div class="meter">
 <div class="bar" style="width:${score}%"></div>
@@ -183,12 +234,16 @@ result = `
 • 자동화 도구<br>
 `;
 
-} else {
+}
+
+/* 기타 */
+else {
 
 result = `
 <div class="no-data">
-<div class="title">⚠️ 데이터 부족</div>
-<div class="desc">아직 충분한 분석 데이터가 없습니다</div>
+<div class="icon">⚠️</div>
+<div class="title">데이터 부족</div>
+<div class="desc">아직 분석 데이터가 충분하지 않습니다</div>
 </div>
 `;
 
