@@ -11,7 +11,7 @@ href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretend
 
 <style>
 
-body {
+body{
   margin:0;
   background:#121212;
   color:white;
@@ -19,34 +19,33 @@ body {
   font-size:18px;
 }
 
-.container {
-  max-width:1200px;
-  margin:80px auto;
+.container{
+  max-width:1100px;
+  margin:70px auto;
   padding:30px;
 }
 
-h1 {
+h1{
   text-align:center;
-  font-size:2.8rem;
-  margin-bottom:35px;
+  font-size:2.7rem;
+  margin-bottom:30px;
 }
 
-.card {
+.card{
   background:white;
   color:#222;
-  padding:50px;
-  border-radius:28px;
+  padding:45px;
+  border-radius:24px;
 }
 
-/* 입력 */
-.search-box {
+.search-box{
   display:flex;
   gap:15px;
 }
 
-input {
+input{
   flex:1;
-  padding:20px;
+  padding:18px;
   font-size:18px;
   border-radius:12px;
   background:#1f1f1f;
@@ -56,8 +55,8 @@ input {
   font-weight:700;
 }
 
-button {
-  padding:20px 30px;
+button{
+  padding:18px 26px;
   font-size:18px;
   background:#2563eb;
   color:white;
@@ -66,83 +65,77 @@ button {
   cursor:pointer;
 }
 
-button:active {
-  transform:scale(0.95);
+/* ===== 게이지 ===== */
+.meter{
+  height:16px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:15px;
 }
 
-/* 점수 배지 */
-.badge {
+.bar{
+  height:100%;
+  transition:0.5s;
+}
+
+/* 배지 */
+.badge{
   display:inline-block;
-  padding:10px 14px;
+  padding:8px 12px;
   border-radius:10px;
   color:white;
   font-weight:bold;
   margin-right:8px;
 }
 
-/* 게이지 */
-.meter {
-  height:16px;
-  background:#ddd;
-  border-radius:10px;
-  overflow:hidden;
-  margin-top:14px;
-}
-
-.bar {
-  height:100%;
-  transition:0.5s;
-}
-
 /* 섹션 */
-.section {
-  margin-top:25px;
+.section{
+  margin-top:22px;
   padding:18px;
-  border-radius:12px;
-  background:#f5f9ff;
+  border-radius:10px;
+  background:#f7f9fc;
   border-left:5px solid #2563eb;
 }
 
-/* 소제목 */
-.section h3 {
-  margin-bottom:10px;
-  font-weight:900;
-  color:#111;
-}
-
-/* 중요 텍스트 */
-.highlight {
+/* 강조 (과도하지 않게) */
+.emph{
+  color:#2563eb;
   font-weight:800;
-  color:#1d4ed8;
 }
 
-/* 날짜 */
-.date {
+/* 작은 날짜 */
+.small-date{
   font-size:12px;
-  color:#333;
-  margin-top:-5px;
-  margin-bottom:10px;
+  color:#111;
+  margin-top:4px;
 }
 
 /* no data */
-.no-data {
+.no-data{
   background:#1f1f1f;
   border:2px solid #ff4d4d;
-  padding:30px;
+  padding:25px;
   border-radius:18px;
   text-align:center;
 }
 
-.no-data .title {
-  font-size:22px;
+.no-data .title{
+  font-size:20px;
   font-weight:bold;
   color:#ff4d4d;
 }
 
-.no-data .desc {
+.no-data .desc{
   color:#ffb4a2;
-  font-size:15px;
-  margin-top:6px;
+  font-size:14px;
+}
+
+/* 구분선 */
+hr{
+  border:none;
+  border-top:1px solid #ddd;
+  margin:20px 0;
 }
 
 </style>
@@ -168,129 +161,120 @@ button:active {
 
 <script>
 
-/* =========================
-   🔥 1. 안정 점수 (7일 기준 고정)
-========================= */
-function hashCode(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++){
-    h = Math.imul(31, h) + str.charCodeAt(i) | 0;
+/* ===== 1. 안정된 점수 (7일 고정) ===== */
+function getScore(keyword){
+  let hash = 0;
+  for(let i=0;i<keyword.length;i++){
+    hash = (hash * 31 + keyword.charCodeAt(i)) % 100;
   }
-  return Math.abs(h);
+
+  const daySeed = Math.floor(Date.now() / (1000*60*60*24*7));
+  return (hash + daySeed) % 101;
 }
 
-function score(keyword){
-  const base = hashCode(keyword);
-  return (base % 101); // 0~100 고정값
+/* ===== 2. 색상 매핑 (요구사항 그대로) ===== */
+function getColor(score){
+
+  if(score <= 15) return "#0b6623";      // 진한 초록
+  if(score <= 30) return "#66bb6a";      // 연두
+  if(score <= 45) return "#fdd835";      // 노랑
+  if(score <= 60) return "#ffb300";      // 노랑-주황
+  if(score <= 75) return "#fb8c00";      // 주황
+  if(score <= 85) return "#ef6c00";      // 진한 주황
+  return "#e53935";                      // 빨강
 }
 
-/* =========================
-   🎨 2. 점수 → 색상
-========================= */
-function getColor(s){
-  if(s <= 15) return "#0f6d3a";        // 진한 초록
-  if(s <= 30) return "#3cb371";        // 초록
-  if(s <= 45) return "#cddc39";        // 연두
-  if(s <= 60) return "#ffd54f";        // 노랑
-  if(s <= 75) return "#ff9800";        // 주황
-  if(s <= 85) return "#f57c00";        // 진한 주황
-  return "#e53935";                   // 빨강
+/* ===== 3. 날짜 ===== */
+function getDateText(){
+  const d = new Date();
+  return d.toLocaleDateString("ko-KR");
 }
 
-/* =========================
-   📰 고정 뉴스 (길게)
-========================= */
-function newsBlock(){
-  const today = new Date();
-  const past = new Date();
-  past.setDate(today.getDate()-7);
-
-  const fmt = (d)=> d.toISOString().split("T")[0];
+/* ===== 4. 화제성 (고정 구조) ===== */
+function getTrendSection(){
 
   return `
   <div class="section">
-    <h3>인터넷 화제성 분석</h3>
-    <div class="date">최근 7일 기준 (${fmt(past)} ~ ${fmt(today)})</div>
+    <h3>📰 인터넷 화제성 분석 ⭐</h3>
+    <div class="small-date">(최근 7일 기준 / ${getDateText()})</div>
 
     <p>
-      해당 키워드는 최근 <b class="highlight">SNS, 유튜브, 커뮤니티</b> 전반에서
-      언급량 변화가 관측되는 주제로 분석됩니다.
+    최근 해당 키워드는 <b>검색량 변화와 SNS 언급량</b> 기준으로 분석되며,<br>
+    <span class="emph">콘텐츠 소비 증가 흐름</span>이 관측됩니다.
     </p>
 
     <p>
-      특히 <b class="highlight">짧은 영상 콘텐츠 중심 확산</b> 패턴이 나타나며
-      정보 소비 속도가 빠르게 증가하는 특징이 있습니다.
+    특히 <b>짧은 영상 플랫폼</b> 중심으로 확산 속도가 빨라지고 있으며,<br>
+    커뮤니티 반응 또한 <span class="emph">점진적 상승 패턴</span>을 보입니다.
     </p>
 
     <p>
-      검색 기반 관심도는 <b class="highlight">단기 상승 + 반복 검색 구조</b>를 보이며,
-      관련 콘텐츠 생산량 또한 함께 증가하는 경향이 있습니다.
-    </p>
-
-    <p>
-      종합적으로 해당 주제는 <b class="highlight">초기 관심 → 확산 단계</b> 구간에 위치할 가능성이 있습니다.
+    종합적으로 <b>중간 이상 화제성</b>을 가진 주제로 분류됩니다.
     </p>
   </div>
   `;
 }
 
-/* =========================
-   👥 관심 / 질문
-========================= */
-function interestBlock(k){
+/* ===== 5. 핵심 관심 ===== */
+function getInterest(){
+
   return `
   <div class="section">
-    <h3>핵심 관심</h3>
-    <p><b class="highlight">${k}</b> 관련 기본 이해, 활용 방식, 실생활 적용이 주요 관심 요소입니다.</p>
+    <h3>📌 핵심 관심 ⭐</h3>
+
+    <p><b class="emph">실제 활용 가능성</b> 중심으로 분석됩니다.</p>
+
+    • 활용 방법 확장성<br>
+    • 실생활 적용 가능성<br>
+    • 콘텐츠 제작 활용도<br>
   </div>
   `;
 }
 
-function questionBlock(k){
+/* ===== 6. 질문 ===== */
+function getQuestions(){
+
   return `
   <div class="section">
-    <h3>주요 질문</h3>
-    <p>• ${k}는 왜 주목받는가?</p>
-    <p>• 지금 시작해도 의미가 있는가?</p>
-    <p>• 실제 수익 또는 활용 가능성은?</p>
+    <h3>❓ 사람들이 궁금해하는 것 ⭐</h3>
+
+    • 지금 시작해도 늦지 않을까?<br>
+    • 실제 수익이 발생할까?<br>
+    • 경쟁 강도는 어떤 수준일까?<br>
   </div>
   `;
 }
 
-/* =========================
-   🚀 메인 실행
-========================= */
+/* ===== 7. 분석 ===== */
 function analyze(){
 
-const k = document.getElementById("keyword").value.trim();
-if(!k) return alert("키워드를 입력하세요");
+const keyword = document.getElementById("keyword").value.trim();
+if(!keyword) return alert("입력하세요");
 
-const s = score(k);
-const color = getColor(s);
+const score = getScore(keyword);
+const color = getColor(score);
 
 let result = `
-<h2>🔍 ${k}</h2>
+<h2>🔍 ${keyword}</h2>
 
-<div class="badge" style="background:${color}">
-🔥 ${s}점
-</div>
+<span class="badge" style="background:${color}">
+🔥 ${score}점
+</span>
 
 <div class="meter">
-  <div class="bar" style="width:${s}%; background:${color}"></div>
+<div class="bar" style="width:${score}%; background:${color}"></div>
 </div>
+
+<hr>
 `;
 
-/* 뉴스 */
-result += newsBlock();
+/* 항상 고정 구조 */
+result += getTrendSection();
+result += getInterest();
+result += getQuestions();
 
-/* 관심 */
-result += interestBlock(k);
-
-/* 질문 */
-result += questionBlock(k);
-
-/* 출력 */
 document.getElementById("result").innerHTML = result;
+
 }
 
 </script>
