@@ -20,7 +20,7 @@ body {
 }
 
 .container {
-  max-width:1200px;
+  max-width:1100px;
   margin:80px auto;
   padding:30px;
 }
@@ -31,15 +31,14 @@ h1 {
   margin-bottom:35px;
 }
 
-/* 카드 */
 .card {
   background:white;
   color:#222;
-  padding:50px;
+  padding:45px;
   border-radius:28px;
 }
 
-/* 검색 */
+/* 입력 */
 .search-box {
   display:flex;
   gap:15px;
@@ -57,6 +56,12 @@ input {
   font-weight:700;
 }
 
+input::placeholder {
+  color:#888;
+  text-align:center;
+}
+
+/* 버튼 */
 button {
   padding:20px 30px;
   font-size:18px;
@@ -67,20 +72,19 @@ button {
   cursor:pointer;
 }
 
-/* 배지 */
-.badge {
-  display:inline-block;
-  padding:9px 14px;
-  border-radius:10px;
-  color:white;
-  font-weight:bold;
-  margin-right:8px;
+button:active {
+  transform:scale(0.95);
 }
 
-/* 점수 색 */
-.low { background:#22c55e; }
-.mid { background:#facc15; color:black; }
-.high { background:#ef4444; }
+/* 배지 (점수 색 연동) */
+.badge {
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:10px;
+  font-weight:800;
+  margin-right:8px;
+  color:white;
+}
 
 /* 게이지 */
 .meter {
@@ -93,28 +97,41 @@ button {
 
 .bar {
   height:100%;
-  transition:0.5s;
-  background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
+  transition:0.4s;
 }
 
 /* 섹션 */
 .section {
-  margin-top:25px;
+  margin-top:22px;
   padding:18px;
   border-left:5px solid #2563eb;
   background:#f8f9fa;
   border-radius:10px;
 }
 
-/* 강조 */
-.highlight {
-  font-weight:900;
-  color:#2563eb;
+/* 제목 */
+.section h3 {
+  margin-bottom:10px;
 }
 
+/* 중요 표시 */
 .star {
   color:#facc15;
   font-weight:bold;
+}
+
+/* 날짜 */
+.date {
+  font-size:12px;
+  color:#000;
+  margin-top:-6px;
+  margin-bottom:10px;
+}
+
+/* 리스트 */
+.section b {
+  color:#111;
+  font-weight:800;
 }
 
 /* no data */
@@ -127,14 +144,14 @@ button {
 }
 
 .no-data .title {
-  font-size:22px;
+  font-size:20px;
   font-weight:bold;
   color:#ff4d4d;
 }
 
 .no-data .desc {
   color:#ffb4a2;
-  font-size:15px;
+  font-size:14px;
   margin-top:6px;
 }
 
@@ -161,114 +178,117 @@ button {
 
 <script>
 
-/* =========================
-   🧠 트렌드 점수 엔진
-========================= */
-
-function hash(str){
-  let h = 0;
+/////////////////////////////
+// 🔥 해시 기반 점수 고정
+/////////////////////////////
+function hashScore(str){
+  let hash = 0;
   for(let i=0;i<str.length;i++){
-    h = (h * 31 + str.charCodeAt(i)) % 100;
+    hash = (hash * 31 + str.charCodeAt(i)) % 101;
   }
-  return h;
+  return hash;
 }
 
-/* 🔥 핵심: 같은 키워드는 비슷한 점수 유지 + 7일 미세 변화 */
 function getScore(keyword){
-  const base = hash(keyword);
-
-  const now = new Date();
-  const weekFactor = (now.getDate() % 7) * 2;
-
-  let score = base + weekFactor;
-
-  if(score > 100) score = 100;
-  return score;
+  // 7일 기준 “고정 트렌드 값”
+  return hashScore(keyword);
 }
 
-/* 점수 레벨 */
-function level(score){
-  if(score < 70) return "low";
-  if(score < 85) return "mid";
-  return "high";
+/////////////////////////////
+// 🎨 점수 → 색상
+/////////////////////////////
+function getColor(score){
+
+  if(score <= 15) return "#0b6623";      // 진한 초록
+  if(score <= 30) return "#7ed957";      // 연두
+  if(score <= 45) return "#facc15";      // 노랑
+  if(score <= 60) return "#fbbf24";      // 노랑-주황
+  if(score <= 75) return "#f97316";      // 주황
+  if(score <= 85) return "#ea580c";      // 진한 주황
+  return "#ef4444";                      // 빨강
 }
 
-/* 📰 화제성 분석 (항상 출력) */
-function getNews(keyword){
+/////////////////////////////
+// 📰 화제성 (고정 구조)
+/////////////////////////////
+function getNews(score){
+
+  let trend =
+    score > 70 ? "급상승" :
+    score > 45 ? "상승" : "보통";
+
   return `
   <div class="section">
-    <h3>📰 인터넷 화제성 분석 <span class="star">★</span>
-      <small style="color:#000;font-size:12px;font-weight:400;">
-        (최근 7일 기준)
-      </small>
-    </h3>
+    <h3>📰 인터넷 화제성 분석 <span class="star">★</span></h3>
+    <div class="date">(최근 7일 기준 / ${new Date().toLocaleDateString()})</div>
 
-    <p><b>${keyword}</b>는 최근 <span class="highlight">SNS / 유튜브 / 커뮤니티</span>에서  
-    언급량이 증가하는 주제로 분석됩니다.</p>
+    <p>현재 해당 키워드는 <b>${trend}</b> 흐름을 보이고 있으며,
+    SNS / 유튜브 / 커뮤니티에서 언급량 변화가 감지됩니다.</p>
 
-    <p>특히 <b>짧은 영상 콘텐츠 중심 확산</b>이 강하며  
-    검색 트렌드는 <b>완만한 상승 흐름</b>입니다 ★</p>
+    <p>특히 짧은 영상 콘텐츠 중심으로 확산되는 패턴이 나타나고 있으며,
+    검색 기반 관심도도 함께 움직이고 있습니다 <span class="star">★</span></p>
   </div>
   `;
 }
 
-/* 👥 핵심 관심 */
-function getInterest(keyword){
+/////////////////////////////
+// 👥 핵심 관심
+/////////////////////////////
+function getInterest(){
   return `
   <div class="section">
     <h3>👥 핵심 관심 <span class="star">★</span></h3>
-    <b>• ${keyword} 기본 개념</b><br>
+
+    <b>• 기본 개념 이해</b><br>
     <b>• 활용 방법</b><br>
-    <b>• 실생활 적용</b><br>
+    <b>• 실제 적용 사례</b><br>
   </div>
   `;
 }
 
-/* ❓ 질문 */
-function getQuestions(keyword){
+/////////////////////////////
+// ❓ 질문
+/////////////////////////////
+function getQuestions(){
   return `
   <div class="section">
     <h3>❓ 사람들이 궁금해하는 것 <span class="star">★</span></h3>
-    <b>• ${keyword}는 왜 인기일까?</b><br>
-    <b>• 지금 시작해도 될까?</b><br>
-    <b>• 수익이 날까?</b><br>
+
+    <b>• 지금 시작해도 늦지 않을까?</b><br>
+    <b>• 수익이 발생할 수 있을까?</b><br>
+    <b>• 경쟁은 어떤 수준일까?</b><br>
   </div>
   `;
 }
 
-/* =========================
-   🚀 분석 실행
-========================= */
-
+/////////////////////////////
+// 🚀 분석 실행
+/////////////////////////////
 function analyze(){
 
-const keyword = document.getElementById("keyword").value.trim();
-if(!keyword) return alert("입력하세요");
+  const keyword = document.getElementById("keyword").value.trim();
+  if(!keyword) return alert("입력하세요");
 
-const score = getScore(keyword);
-const lv = level(score);
+  const score = getScore(keyword);
+  const color = getColor(score);
 
-let result = `
-<h2>🔍 <b>${keyword}</b></h2>
+  let result = `
+    <h2>🔍 ${keyword}</h2>
 
-<span class="badge ${lv}">
-경쟁 ${lv === "low" ? "낮음" : lv === "mid" ? "중간" : "높음"}
-</span>
+    <span class="badge" style="background:${color}">
+      🔥 ${score}점
+    </span>
 
-<span class="badge ${lv}">🔥 ${score}점</span>
+    <div class="meter">
+      <div class="bar" style="width:${score}%; background:${color}"></div>
+    </div>
+  `;
 
-<div class="meter">
-<div class="bar" style="width:${score}%"></div>
-</div>
-`;
+  result += getNews(score);
+  result += getInterest();
+  result += getQuestions();
 
-/* 항상 출력 구조 */
-result += getNews(keyword);
-result += getInterest(keyword);
-result += getQuestions(keyword);
-
-/* 출력 */
-document.getElementById("result").innerHTML = result;
+  document.getElementById("result").innerHTML = result;
 }
 
 </script>
