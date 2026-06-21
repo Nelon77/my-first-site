@@ -111,8 +111,9 @@
       background: #4caf50;
     }
 
+    /* 🔥 변경된 부분 (주황 → 붉은색) */
     .warn {
-      background: #ff9800;
+      background: #ff4d4d;
     }
 
     hr {
@@ -147,15 +148,9 @@
 
       <div class="search-box">
 
-        <input
-          type="text"
-          id="keyword"
-          placeholder="키워드를 입력하세요"
-        >
+        <input type="text" id="keyword" placeholder="키워드를 입력하세요">
 
-        <button onclick="analyze()">
-          분석하기
-        </button>
+        <button onclick="analyze()">분석하기</button>
 
       </div>
 
@@ -169,10 +164,7 @@
 
     function analyze() {
 
-      const keyword = document
-        .getElementById("keyword")
-        .value
-        .trim();
+      const keyword = document.getElementById("keyword").value.trim();
 
       if (keyword === "") {
         alert("키워드를 입력하세요.");
@@ -204,39 +196,17 @@
 
           👍 저예산 인테리어<br>
           → "10만 원 이하 방 꾸미기" 검색량 증가<br>
-          → 대학생·사회초년생 관심도 높음<br>
-          → 가성비 콘텐츠 선호<br><br>
+          → 대학생·사회초년생 관심도 높음<br><br>
 
           👍 학생 방 꾸미기<br>
           → 쇼츠·릴스 반응 높음<br>
-          → 책상 배치 질문 증가<br>
-          → 수납 꿀팁 콘텐츠 인기<br><br>
+          → 책상 배치 질문 증가<br><br>
 
           👎 북유럽 인테리어<br>
-          → 미니멀 키워드로 관심 이동<br>
-          → 고가 가구 콘텐츠 반응 감소<br>
-
-          <hr>
-
-          <h3>❓ 사람들이 궁금해하는 것</h3>
-
-          • 좁은 방 수납 방법은?<br>
-          • 예산 10만 원으로 가능할까?<br>
-          • 다이소 추천템은?<br>
-
-          <hr>
-
-          <h3>🎥 반응 좋은 콘텐츠 유형</h3>
-
-          • 전후 비교 영상<br>
-          • 다이소 추천템 모음<br>
-          • 방 꾸미기 챌린지<br>
+          → 관심 감소<br>
         `;
 
-      } else if (
-        keyword.includes("AI") ||
-        keyword.includes("인공지능")
-      ) {
+      } else if (keyword.includes("AI") || keyword.includes("인공지능")) {
 
         result = `
           <h2>🔍 검색어: ${keyword}</h2>
@@ -255,35 +225,10 @@
 
           <hr>
 
-          <h3>세부 관심 주제</h3>
-
-          👍 AI 영상 제작<br>
-          → 쇼츠 자동 제작 관심 증가<br>
-          → 유튜브 크리에이터 유입 증가<br><br>
-
-          👍 AI 공부법<br>
-          → 학생 사용자 급증<br>
-          → 프롬프트 활용법 인기<br><br>
-
-          👍 AI 업무 자동화<br>
-          → 생산성 도구 관심 증가<br>
-          → 직장인 검색량 상승<br>
-
-          <hr>
-
           <h3>❓ 사람들이 궁금해하는 것</h3>
 
-          • 무료 AI 툴 추천은?<br>
-          • AI로 영상 만드는 방법은?<br>
-          • 공부에 활용할 수 있을까?<br>
-
-          <hr>
-
-          <h3>🎥 반응 좋은 콘텐츠 유형</h3>
-
-          • AI 툴 모음 영상<br>
-          • 업무 자동화 사례<br>
-          • 1분 AI 꿀팁 쇼츠<br>
+          • AI 툴 추천<br>
+          • 영상 제작 방법<br>
         `;
 
       } else {
@@ -296,8 +241,6 @@
           <hr>
 
           <p>아직 분석 데이터가 부족합니다.</p>
-
-          <p>곧 더 많은 키워드를 지원할 예정입니다.</p>
         `;
       }
 
