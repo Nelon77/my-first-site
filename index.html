@@ -219,18 +219,47 @@ function question(keyword){
     <b>• 수익성이 있는가?</b><br>
   </div>
   `;
-}
-
-/* 🚀 분석 */
-function analyze(){
+async function analyze(){
 
 const k = document.getElementById("keyword").value.trim();
 if(!k) return alert("입력하세요");
 
-const s = score(k);
-const color = getColor(s);
+document.getElementById("result").innerHTML =
+`<p style="color:#2563eb;font-weight:800;">🔄 분석 중...</p>`;
 
-document.getElementById("result").innerHTML = `
+/* 🚀 여기서 OpenAI 호출 */
+fetch(`/api/analyze?keyword=${k}`)
+  .then(res => res.json())
+  .then(data => {
+
+    const s = data.score;
+    const color = getColor(s);
+
+    document.getElementById("result").innerHTML = `
+
+<h2>🔍 <b style="color:#2563eb">${k}</b></h2>
+
+<div>
+  <span class="score">🔥 ${s}점</span>
+</div>
+
+<div class="meter">
+  <div class="bar" style="width:${s}%; background:${color}"></div>
+</div>
+
+${newsBlock(k)}
+${interest(k)}
+${question(k)}
+
+`;
+  })
+
+  .catch(err => {
+    document.getElementById("result").innerHTML =
+    `<p style="color:red;font-weight:800;">⚠️ 분석 실패</p>`;
+  });
+
+}
 
 <h2>🔍 <b style="color:#2563eb">${k}</b></h2>
 
