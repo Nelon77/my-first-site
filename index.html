@@ -11,16 +11,13 @@ href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretend
 
 <style>
 
-/* 🌑 전체 확대 (핵심) */
 body {
   margin:0;
   background:#121212;
   color:white;
   font-family:Pretendard;
-  font-size:18px;
 }
 
-/* 컨테이너 더 크게 */
 .container {
   max-width:1100px;
   margin:70px auto;
@@ -33,7 +30,6 @@ h1 {
   margin-bottom:30px;
 }
 
-/* 카드 크게 */
 .card {
   background:white;
   color:#222;
@@ -41,7 +37,7 @@ h1 {
   border-radius:25px;
 }
 
-/* 입력 영역 */
+/* input */
 .search-box {
   display:flex;
   gap:15px;
@@ -57,7 +53,6 @@ input {
   border:none;
 }
 
-/* 버튼 크게 */
 button {
   padding:18px 28px;
   font-size:18px;
@@ -72,13 +67,7 @@ button:active {
   transform:scale(0.95);
 }
 
-/* 결과 */
-#result {
-  margin-top:30px;
-  font-size:18px;
-}
-
-/* 배지 */
+/* badge */
 .badge {
   display:inline-block;
   padding:8px 12px;
@@ -88,7 +77,6 @@ button:active {
   margin-right:8px;
 }
 
-/* 경쟁 색 */
 .low { background:#22c55e; }
 .mid { background:#facc15; color:black; }
 .high { background:#ef4444; }
@@ -108,7 +96,26 @@ button:active {
   background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
 }
 
-/* ⚠️ 데이터 부족 카드 */
+/* 섹션 */
+.section {
+  margin-top:22px;
+  padding:15px;
+  border-left:4px solid #2563eb;
+}
+
+/* 중요 텍스트 */
+.highlight {
+  font-weight:800;
+  color:#2563eb;
+}
+
+/* 별 강조 */
+.star {
+  color:#facc15;
+  font-weight:bold;
+}
+
+/* no data */
 .no-data {
   background:#1f1f1f;
   border:2px solid #ff4d4d;
@@ -117,28 +124,16 @@ button:active {
   text-align:center;
 }
 
-.no-data .icon {
-  font-size:32px;
-}
-
 .no-data .title {
   font-size:20px;
   font-weight:bold;
-  color:#ff4d4d; /* 🔥 핵심: 주황/빨강 강조 */
-  margin-top:8px;
+  color:#ff4d4d;
 }
 
 .no-data .desc {
-  color:#ffb4a2; /* 🔥 기존 회색 → 따뜻한 주황 */
-  font-size:15px;
+  color:#ffb4a2;
+  font-size:14px;
   margin-top:6px;
-}
-
-/* 구분선 */
-hr {
-  border:none;
-  border-top:1px solid #ddd;
-  margin:25px 0;
 }
 
 </style>
@@ -174,6 +169,25 @@ function level(score) {
   return "high";
 }
 
+/* 🧠 뉴스 생성 (핵심 추가) */
+function getNews(keyword) {
+
+  return `
+  <div class="section">
+    <h3>📰 최신 화제성 분석 <span class="star">★</span></h3>
+
+    <p><b>${keyword}</b> 관련 키워드는 최근 <span class="highlight">SNS / 유튜브 / 커뮤니티</span>에서 
+    <b>언급량이 증가</b>하고 있는 주제입니다.</p>
+
+    <p>특히 <b>20~30대 중심 콘텐츠 소비 증가</b>가 관측되며,
+    <span class="highlight">짧은 영상(Shorts/Reels)</span>에서 확산 속도가 빠릅니다.</p>
+
+    <p>최근 7일 기준 검색 트렌드는 <b>상승 흐름</b>이며,
+    관련 콘텐츠 제작 수요도 증가 중입니다 <span class="star">★</span></p>
+  </div>
+  `;
+}
+
 function analyze() {
 
 const keyword = document.getElementById("keyword").value.trim();
@@ -184,7 +198,6 @@ const lv = level(score);
 
 let result = "";
 
-/* 🔥 원룸 복구 + 확장 */
 if(keyword.includes("원룸")) {
 
 result = `
@@ -197,24 +210,25 @@ result = `
 <div class="bar" style="width:${score}%"></div>
 </div>
 
-<hr>
+${getNews(keyword)}
 
-<h3>👥 핵심 관심</h3>
-• 원룸 인테리어<br>
-• 좁은 공간 활용<br>
-• 가성비 가구 추천<br>
+<div class="section">
+<h3>👥 핵심 관심 ⭐</h3>
+<b>• 원룸 인테리어</b><br>
+<b>• 좁은 공간 활용</b><br>
+<b>• 가성비 가구 추천</b><br>
+</div>
 
-<hr>
-
-<h3>❓ 질문</h3>
-• 10만원으로 꾸밀 수 있을까?<br>
-• 수납 어떻게 하지?<br>
-• 좁은 방 넓어 보이게 하는 법?<br>
+<div class="section">
+<h3>❓ 사람들이 궁금해하는 것 ⭐</h3>
+<b>• 10만원으로 꾸밀 수 있을까?</b><br>
+<b>• 수납 어떻게 하지?</b><br>
+<b>• 좁은 방 넓어 보이게 하는 법?</b><br>
+</div>
 `;
 
 }
 
-/* AI */
 else if(keyword.includes("AI")) {
 
 result = `
@@ -227,22 +241,23 @@ result = `
 <div class="bar" style="width:${score}%"></div>
 </div>
 
-<hr>
+${getNews(keyword)}
 
-<h3>❓ 질문</h3>
-• AI 활용법<br>
-• 자동화 도구<br>
+<div class="section">
+<h3>❓ AI 질문 ⭐</h3>
+<b>• AI 활용법</b><br>
+<b>• 자동화 도구</b><br>
+<b>• 영상 제작 AI</b><br>
+</div>
 `;
 
 }
 
-/* 기타 */
 else {
 
 result = `
 <div class="no-data">
-<div class="icon">⚠️</div>
-<div class="title">데이터 부족</div>
+<div class="title">⚠️ 데이터 부족</div>
 <div class="desc">아직 분석 데이터가 충분하지 않습니다</div>
 </div>
 `;
