@@ -38,7 +38,7 @@ h1 {
   border-radius:28px;
 }
 
-/* 입력 */
+/* input */
 .search-box {
   display:flex;
   gap:15px;
@@ -102,7 +102,7 @@ button {
   border-radius:10px;
 }
 
-/* ⭐ 별 */
+/* ⭐ */
 .star {
   color:#facc15;
   font-weight:bold;
@@ -118,7 +118,7 @@ button {
   border-radius:10px;
 }
 
-/* 🔵 진짜 핵심만 파란색 */
+/* 🔵 강조 */
 .blue {
   color:#2563eb;
   font-weight:900;
@@ -152,22 +152,59 @@ h3 {
 
 <script>
 
-/* 점수 */
 function score(){
   return Math.floor(Math.random()*40 + 60);
 }
 
+function removeKeywordHighlight(text, keyword){
+  if(!keyword) return text;
+
+  // 🔥 keyword가 있으면 절대 강조하지 않도록 치환
+  const regex = new RegExp(keyword, "g");
+  return text.replace(regex, keyword);
+}
+
 /* 뉴스 */
 function news(keyword){
-  return `
+  let text = `
   <div class="news">
     <h3>📰 인터넷 화제성 분석<span class="star">★</span></h3>
 
-    <p><span class="blue">${keyword}</span>는 현재 SNS / 뉴스 / 유튜브에서 빠르게 확산 중입니다.</p>
+    <p>${keyword}는 현재 SNS / 뉴스 / 유튜브에서 빠르게 확산 중입니다.</p>
 
     <p><b>짧은 영상 중심 확산</b> + <b>검색량 상승</b>이 동시에 나타나는 중입니다.</p>
   </div>
   `;
+
+  return removeKeywordHighlight(text, keyword);
+}
+
+/* 핵심 관심 */
+function interest(keyword){
+  let text = `
+  <div class="section">
+    <h3>👥 핵심 관심<span class="star">★</span></h3>
+    <b>• ${keyword} 활용 방법</b><br>
+    <b>• 수익 구조 분석</b><br>
+    <b>• 시장 전망</b><br>
+  </div>
+  `;
+
+  return removeKeywordHighlight(text, keyword);
+}
+
+/* 질문 */
+function questions(keyword){
+  let text = `
+  <div class="section">
+    <h3>❓ 사람들이 궁금해하는 것<span class="star">★</span></h3>
+    <b>• 지금 시작해도 될까?</b><br>
+    <b>• 돈이 될까?</b><br>
+    <b>• 경쟁은 어떤가?</b><br>
+  </div>
+  `;
+
+  return removeKeywordHighlight(text, keyword);
 }
 
 /* 분석 */
@@ -190,20 +227,8 @@ result.innerHTML = `
 </div>
 
 ${news(keyword)}
-
-<div class="section">
-<h3>👥 핵심 관심<span class="star">★</span></h3>
-<b>• ${keyword} 활용 방법</b><br>
-<b>• 수익 구조 분석</b><br>
-<b>• 시장 전망</b><br>
-</div>
-
-<div class="section">
-<h3>❓ 사람들이 궁금해하는 것<span class="star">★</span></h3>
-<b>• 지금 시작해도 될까?</b><br>
-<b>• 돈이 될까?</b><br>
-<b>• 경쟁은 어떤가?</b><br>
-</div>
+${interest(keyword)}
+${questions(keyword)}
 `;
 
 }
