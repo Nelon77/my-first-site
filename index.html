@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI 트렌드 분석기</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      font-family: sans-serif;
+      color: #333;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    input {
+      width: 70%;
+      padding: 15px;
+      border: 2px solid #ddd;
+      border-radius: 12px;
+      font-size: 18px;
+    }
+
+    button {
+      padding: 15px 25px;
+      border: none;
+      border-radius: 12px;
+      background: #ff9800;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    #result {
+      margin-top: 30px;
+      line-height: 1.8;
+      white-space: pre-line;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-right: 10px;
+      color: white;
+      font-size: 14px;
+    }
+
+    .hot { background: #ff5722; }
+    .up { background: #4caf50; }
+    .warn { background: #ff9800; }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="card">
+
+      <h1>🔥 AI 트렌드 분석기</h1>
+
+      <input
+        id="keyword"
+        placeholder="키워드를 입력하세요"
+      >
+
+      <button onclick="analyze()">
+        분석하기
+      </button>
+
+      <div id="result"></div>
+
+    </div>
+
+  </div>
+
+  <script>
+
+    function analyze() {
+
+      const keyword =
+        document.getElementById("keyword").value;
+
+      if (!keyword) {
+        alert("키워드를 입력하세요.");
+        return;
+      }
+
+      document.getElementById("result").innerHTML = `
+        <h2>🔍 검색어: ${keyword}</h2>
+
+        <span class="badge hot">🔥 화제성 87점</span>
+        <span class="badge up">📈 상승 중</span>
+        <span class="badge warn">⚠️ 경쟁 중간</span>
+
+        <hr>
+
+        <h3>👥 핵심 관심 세대</h3>
+
+        10대 ★★★☆☆<br>
+        20대 ★★★★★<br>
+        30대 ★★★★☆<br>
+
+        <hr>
+
+        <h3>세부 관심 주제</h3>
+
+        👍 저예산 인테리어<br>
+        → "10만 원 이하 방 꾸미기" 검색량 증가<br>
+        → 대학생·사회초년생 관심도 높음<br>
+        → 가성비 콘텐츠 선호<br><br>
+
+        👍 학생 방 꾸미기<br>
+        → 쇼츠·릴스 반응 높음<br>
+        → 책상 배치 질문 증가<br>
+        → 수납 꿀팁 콘텐츠 인기<br><br>
+
+        👎 북유럽 인테리어<br>
+        → 미니멀 키워드로 관심 이동<br>
+        → 고가 가구 콘텐츠 반응 감소<br><br>
+
+        <hr>
+
+        <h3>❓ 사람들이 궁금해하는 것</h3>
+
+        • 좁은 방 수납 방법은?<br>
+        • 예산 10만 원으로 가능할까?<br>
+        • 다이소 추천템은?<br>
+
+        <hr>
+
+        <h3>🎥 반응 좋은 콘텐츠 유형</h3>
+
+        • 전후 비교 영상<br>
+        • 다이소 추천템 모음<br>
+        • 방 꾸미기 챌린지<br>
+      `;
+    }
+
+  </script>
+
+</body>
+</html>
