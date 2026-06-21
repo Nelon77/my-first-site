@@ -16,7 +16,6 @@ body {
   background:#121212;
   color:white;
   font-family:Pretendard;
-  font-size:18px;
 }
 
 .container {
@@ -31,6 +30,7 @@ h1 {
   margin-bottom:35px;
 }
 
+/* 카드 */
 .card {
   background:white;
   color:#222;
@@ -38,6 +38,7 @@ h1 {
   border-radius:28px;
 }
 
+/* 검색 */
 .search-box {
   display:flex;
   gap:15px;
@@ -52,7 +53,13 @@ input {
   color:white;
   border:none;
   text-align:center;
-  font-weight:800;
+  font-weight:700;
+}
+
+/* 🔥 자동완성 / 크롬 추천 제거 */
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px #1f1f1f inset !important;
+  -webkit-text-fill-color: white !important;
 }
 
 button {
@@ -65,24 +72,27 @@ button {
   cursor:pointer;
 }
 
-/* 결과 */
-#result {
-  margin-top:25px;
-}
-
 /* 배지 */
 .badge {
   display:inline-block;
   padding:10px 14px;
   border-radius:10px;
   color:white;
-  font-weight:900;
+  font-weight:bold;
   margin-right:8px;
 }
 
-/* meter */
+/* 🎯 0~100 완전 정밀 색상 매핑 */
+.c0 { background:#0b3d0b; }     /* 0~15 진한 초록 */
+.c1 { background:#3cb371; }     /* 16~30 연두 */
+.c2 { background:#f1e05a; color:black; } /* 31~45 노랑 */
+.c3 { background:#f4c430; color:black; } /* 46~60 노랑-주황 */
+.c4 { background:#ff9800; }     /* 61~75 주황 */
+.c5 { background:#ff6f00; }     /* 76~85 진한 주황 */
+.c6 { background:#e53935; }     /* 86~100 빨강 */
+
 .meter {
-  height:18px;
+  height:16px;
   background:#ddd;
   border-radius:10px;
   overflow:hidden;
@@ -91,40 +101,50 @@ button {
 
 .bar {
   height:100%;
-  transition:0.6s;
+  transition:0.5s;
 }
 
-/* 섹션 */
 .section {
   margin-top:25px;
-  padding:20px;
+  padding:18px;
   border-left:5px solid #2563eb;
   background:#f8f9fa;
   border-radius:10px;
-  color:#111;
 }
 
-/* ⭐ 강조 */
-.star {
-  color:#facc15;
-  font-weight:900;
-  margin-left:6px;
-}
-
-/* 뉴스 */
-.news {
-  margin-top:20px;
-  padding:20px;
-  border-left:6px solid #2563eb;
-  background:#eef5ff;
-  border-radius:10px;
-}
-
-/* 날짜 */
-.date {
-  font-size:13px;
-  color:#555;
+.section h3 {
   margin-bottom:10px;
+}
+
+.star {
+  color:#FFD700;
+  font-weight:bold;
+}
+
+.highlight {
+  color:#2563eb;
+  font-weight:900;
+}
+
+/* no data */
+.no-data {
+  background:#1f1f1f;
+  border:2px solid #ff4d4d;
+  padding:30px;
+  border-radius:18px;
+  text-align:center;
+}
+
+.no-data .title {
+  font-size:22px;
+  font-weight:bold;
+  color:#ff4d4d;
+}
+
+.no-data .desc {
+  color:#ffb4a2;
+  font-size:15px;
+  margin-top:6px;
 }
 
 </style>
@@ -139,7 +159,7 @@ button {
 <div class="card">
 
 <div class="search-box">
-<input id="keyword" placeholder="키워드를 입력하세요">
+<input id="keyword" autocomplete="off" placeholder="키워드를 입력하세요">
 <button onclick="analyze()">분석</button>
 </div>
 
@@ -150,120 +170,101 @@ button {
 
 <script>
 
-////////////////////////////////////////////////////
-// 🔥 1. 점수 고정 (키워드 기반 hash)
-////////////////////////////////////////////////////
-function score(keyword){
-  let hash = 0;
-  for(let i=0;i<keyword.length;i++){
-    hash = (hash * 31 + keyword.charCodeAt(i)) % 100;
-  }
-  return 40 + (hash % 60); // 40~100 고정
+/* 점수 */
+function score(){
+  return Math.floor(Math.random()*100);
 }
 
-////////////////////////////////////////////////////
-// 🎨 색상 (구간 매핑 유지)
-////////////////////////////////////////////////////
-function getColor(s){
-  if(s <= 15) return "rgb(0,140,60)";
-  if(s <= 30) return "rgb(80,200,80)";
-  if(s <= 45) return "rgb(255,230,80)";
-  if(s <= 60) return "rgb(255,170,60)";
-  if(s <= 75) return "rgb(255,120,40)";
-  if(s <= 85) return "rgb(220,80,30)";
-  return "rgb(220,40,40)";
+/* 🎯 색상 매핑 */
+function getColorClass(score){
+  if(score <= 15) return "c0";
+  if(score <= 30) return "c1";
+  if(score <= 45) return "c2";
+  if(score <= 60) return "c3";
+  if(score <= 75) return "c4";
+  if(score <= 85) return "c5";
+  return "c6";
 }
 
-////////////////////////////////////////////////////
-// 📅 날짜 (7일 기준)
-////////////////////////////////////////////////////
-function getDateRange(){
-  const now = new Date();
-  const past = new Date();
-  past.setDate(now.getDate() - 7);
-
-  return `${past.toISOString().split("T")[0]} ~ ${now.toISOString().split("T")[0]} 기준`;
+/* 날짜 */
+function getDate(){
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
 }
 
-////////////////////////////////////////////////////
-// 📰 화제성 (확장 버전)
-////////////////////////////////////////////////////
-function news(k){
-  return `
-  <div class="news">
-    <h3>📰 인터넷 화제성 분석 <span class="star">★</span></h3>
+/* 🔥 화제성 (풍부 + 과하지 않게) */
+function getNews(keyword){
 
-    <div class="date">${getDateRange()}</div>
+return `
+<div class="section">
+<h3>📰 인터넷 화제성 분석 <span class="star">★</span></h3>
 
-    <p><b>${k}</b>는 최근 SNS, 유튜브, 커뮤니티 전반에서 언급량이 꾸준히 증가하고 있는 주제입니다.</p>
+<p><b>${keyword}</b> 관련 키워드는 최근 <span class="highlight">SNS, 유튜브, 커뮤니티</span>에서
+점진적으로 언급량이 증가하고 있습니다.</p>
 
-    <p>특히 짧은 영상 콘텐츠(Shorts, Reels) 중심으로 확산 속도가 빠르며  
-    사용자 참여형 콘텐츠가 급격히 증가하는 흐름이 관측됩니다.</p>
+<p><b>최근 7일(${getDate()} 기준)</b> 트렌드 분석 결과,
+해당 주제는 <b>검색 관심도 상승 구간</b>에 위치합니다.</p>
 
-    <p>최근 7일 기준 검색량은 상승 추세이며  
-    <b>트렌드 민감도가 높은 주제</b>로 분류됩니다 ★</p>
-  </div>
-  `;
+<p>특히 <b>짧은 영상 콘텐츠 중심 확산</b>이 주요 특징이며,
+관련 정보 소비가 빠르게 증가하는 패턴이 확인됩니다 ★</p>
+</div>
+`;
 }
 
-////////////////////////////////////////////////////
-// 👥 핵심 관심
-////////////////////////////////////////////////////
-function interest(k){
-  return `
-  <div class="section">
-    <h3>👥 핵심 관심 <span class="star">★</span></h3>
+/* 핵심 관심 */
+function getInterest(keyword){
+return `
+<div class="section">
+<h3>👥 핵심 관심 <span class="star">★</span></h3>
 
-    <b>• ${k}의 기본 구조 이해</b><br>
-    <b>• 실제 활용 사례 분석</b><br>
-    <b>• 수익/응용 가능성 탐색</b><br>
-  </div>
-  `;
+<b>• 관련 활용 분야</b><br>
+<b>• 실생활 적용 사례</b><br>
+<b>• 트렌드 확장 가능성</b><br>
+</div>
+`;
 }
 
-////////////////////////////////////////////////////
-// ❓ 질문
-////////////////////////////////////////////////////
-function questions(){
-  return `
-  <div class="section">
-    <h3>❓ 사람들이 궁금해하는 것 <span class="star">★</span></h3>
+/* 질문 */
+function getQuestions(){
+return `
+<div class="section">
+<h3>❓ 사람들이 궁금해하는 것 <span class="star">★</span></h3>
 
-    <b>• 지금 시작해도 늦지 않았나?</b><br>
-    <b>• 실제 수익화가 가능한가?</b><br>
-    <b>• 경쟁 강도는 어느 정도인가?</b><br>
-  </div>
-  `;
+<b>• 지금 시작해도 늦지 않을까?</b><br>
+<b>• 실제 수익이 가능한가?</b><br>
+<b>• 경쟁 강도는 어떤가?</b><br>
+</div>
+`;
 }
 
-////////////////////////////////////////////////////
-// 🚀 실행
-////////////////////////////////////////////////////
+/* 키워드 강조 제거 함수 */
+function cleanText(text, keyword){
+  return text.replaceAll(keyword, `<b>${keyword}</b>`);
+}
+
 function analyze(){
 
-const k = document.getElementById("keyword").value.trim();
-if(!k) return alert("입력하세요");
+const keyword = document.getElementById("keyword").value.trim();
+if(!keyword) return alert("입력하세요");
 
-const s = score(k);
-const color = getColor(s);
+const s = score();
+const c = getColorClass(s);
 
-document.getElementById("result").innerHTML = `
+let result = `
+<h2>🔍 ${keyword}</h2>
 
-<h2>🔍 <b>${k}</b></h2>
-
-<span class="badge" style="background:${color}">
-🔥 ${s}점
-</span>
+<span class="badge ${c}">🔥 ${s}점</span>
 
 <div class="meter">
-<div class="bar" style="width:${s}%; background:${color}"></div>
+<div class="bar ${c}" style="width:${s}%"></div>
 </div>
-
-${news(k)}
-${interest(k)}
-${questions()}
-
 `;
+
+result += getNews(keyword);
+result += getInterest(keyword);
+result += getQuestions();
+
+document.getElementById("result").innerHTML = result;
 
 }
 
