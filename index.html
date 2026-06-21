@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🧐 AI 트렌드 분석기</title>
+<title>🧐 AI 트렌드 브리핑</title>
 
 <link rel="stylesheet"
 href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
@@ -16,45 +16,74 @@ body {
   background:#121212;
   color:white;
   font-family:Pretendard;
+  font-size:18px;
 }
 
 .container {
-  max-width:1100px;
-  margin:70px auto;
+  max-width:1200px;
+  margin:80px auto;
   padding:30px;
 }
 
 h1 {
   text-align:center;
-  font-size:2.6rem;
-  margin-bottom:30px;
+  font-size:2.8rem;
+  margin-bottom:35px;
 }
 
+/* 카드 */
 .card {
   background:white;
   color:#222;
-  padding:40px;
-  border-radius:25px;
+  padding:50px;
+  border-radius:28px;
 }
 
-/* input */
+/* 검색 */
 .search-box {
   display:flex;
   gap:15px;
+  position:relative;
 }
 
 input {
   flex:1;
-  padding:18px;
+  padding:20px;
   font-size:18px;
   border-radius:12px;
   background:#1f1f1f;
   color:white;
   border:none;
+
+  text-align:center;
+  font-weight:800;
 }
 
+/* 추천 */
+.suggest-box {
+  position:absolute;
+  top:70px;
+  left:0;
+  right:0;
+  background:#222;
+  border-radius:10px;
+  display:none;
+  overflow:hidden;
+  z-index:10;
+}
+
+.suggest-box div {
+  padding:12px;
+  cursor:pointer;
+}
+
+.suggest-box div:hover {
+  background:#333;
+}
+
+/* 버튼 */
 button {
-  padding:18px 28px;
+  padding:20px 30px;
   font-size:18px;
   background:#2563eb;
   color:white;
@@ -63,14 +92,10 @@ button {
   cursor:pointer;
 }
 
-button:active {
-  transform:scale(0.95);
-}
-
-/* badge */
+/* 배지 */
 .badge {
   display:inline-block;
-  padding:8px 12px;
+  padding:9px 14px;
   border-radius:10px;
   color:white;
   font-weight:bold;
@@ -83,11 +108,11 @@ button:active {
 
 /* meter */
 .meter {
-  height:14px;
+  height:16px;
   background:#ddd;
   border-radius:10px;
   overflow:hidden;
-  margin-top:12px;
+  margin-top:14px;
 }
 
 .bar {
@@ -98,42 +123,57 @@ button:active {
 
 /* 섹션 */
 .section {
-  margin-top:22px;
-  padding:15px;
-  border-left:4px solid #2563eb;
+  margin-top:25px;
+  padding:18px;
+  border-left:5px solid #2563eb;
+  background:#f8f9fa;
+  border-radius:10px;
 }
 
-/* 중요 텍스트 */
+/* 강조 */
 .highlight {
-  font-weight:800;
+  font-weight:900;
   color:#2563eb;
 }
 
-/* 별 강조 */
 .star {
   color:#facc15;
   font-weight:bold;
 }
 
-/* no data */
-.no-data {
-  background:#1f1f1f;
-  border:2px solid #ff4d4d;
-  padding:25px;
-  border-radius:18px;
-  text-align:center;
-}
-
-.no-data .title {
-  font-size:20px;
+/* 로딩 */
+.loading {
+  color:#2563eb;
   font-weight:bold;
-  color:#ff4d4d;
+  margin-top:15px;
 }
 
-.no-data .desc {
-  color:#ffb4a2;
-  font-size:14px;
-  margin-top:6px;
+/* 🦖 공룡 */
+.dino {
+  display:none;
+  text-align:center;
+  font-size:70px;
+  margin-top:20px;
+  animation:bounce 0.7s infinite;
+}
+
+.dino span {
+  display:block;
+  font-size:16px;
+  color:#3b82f6;
+  font-weight:900;
+}
+
+@keyframes bounce {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-12px); }
+}
+
+/* 타이핑 */
+.typing {
+  display:inline-block;
+  border-right:2px solid #333;
+  margin:5px 0;
 }
 
 </style>
@@ -143,13 +183,22 @@ button:active {
 
 <div class="container">
 
-<h1>🧐 AI 트렌드 분석기</h1>
+<h1>🧐 AI 트렌드 브리핑</h1>
 
 <div class="card">
 
 <div class="search-box">
-<input id="keyword" placeholder="키워드를 입력하세요">
-<button onclick="analyze()">분석하기</button>
+<input id="keyword" placeholder="키워드를 입력하세요"
+oninput="suggest(this.value)">
+<button onclick="analyze()">분석</button>
+
+<div class="suggest-box" id="suggestBox"></div>
+</div>
+
+<!-- 🦖 공룡 로딩 -->
+<div id="dino" class="dino">
+🦖
+<span>기다려 주시오!!</span>
 </div>
 
 <div id="result"></div>
@@ -159,112 +208,129 @@ button:active {
 
 <script>
 
-function scoreGen() {
+/* ================= 추천 ================= */
+function suggest(v){
+  const box = document.getElementById("suggestBox");
+
+  if(!v){
+    box.style.display="none";
+    return;
+  }
+
+  const list = [
+    v+" 트렌드",
+    v+" 수익",
+    v+" 분석",
+    v+" 전망"
+  ];
+
+  box.innerHTML = list.map(i =>
+    `<div onclick="select('${i}')">${i}</div>`
+  ).join("");
+
+  box.style.display="block";
+}
+
+function select(v){
+  document.getElementById("keyword").value = v;
+  document.getElementById("suggestBox").style.display="none";
+}
+
+/* ================= 점수 ================= */
+function score(){
   return Math.floor(Math.random()*40 + 60);
 }
 
-function level(score) {
-  if(score < 70) return "low";
-  if(score < 85) return "mid";
-  return "high";
-}
-
-/* 🧠 뉴스 생성 (핵심 추가) */
-function getNews(keyword) {
-
+/* ================= 뉴스 ================= */
+function news(keyword){
   return `
   <div class="section">
-    <h3>📰 최신 화제성 분석 <span class="star">★</span></h3>
-
-    <p><b>${keyword}</b> 관련 키워드는 최근 <span class="highlight">SNS / 유튜브 / 커뮤니티</span>에서 
-    <b>언급량이 증가</b>하고 있는 주제입니다.</p>
-
-    <p>특히 <b>20~30대 중심 콘텐츠 소비 증가</b>가 관측되며,
-    <span class="highlight">짧은 영상(Shorts/Reels)</span>에서 확산 속도가 빠릅니다.</p>
-
-    <p>최근 7일 기준 검색 트렌드는 <b>상승 흐름</b>이며,
-    관련 콘텐츠 제작 수요도 증가 중입니다 <span class="star">★</span></p>
+    <h3>📰 화제성 분석 ★</h3>
+    <p><b>${keyword}</b>는 SNS / 유튜브 / 커뮤니티에서 빠르게 확산 중입니다.</p>
+    <p>검색량은 <b>상승 추세</b>이며 콘텐츠 수요도 증가 중 ★</p>
   </div>
   `;
 }
 
-function analyze() {
+/* ================= 스트리밍 ================= */
+function stream(el, arr, i=0){
+  if(i>=arr.length) return;
+
+  el.innerHTML += `<div class="typing">${arr[i]}</div><br>`;
+
+  setTimeout(()=>stream(el, arr, i+1), 500);
+}
+
+/* ================= 분석 ================= */
+function analyze(){
 
 const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
-const score = scoreGen();
-const lv = level(score);
+const result = document.getElementById("result");
+const dino = document.getElementById("dino");
 
-let result = "";
+/* 초기 */
+result.innerHTML = `<div class="loading">🧠 분석 중...</div>`;
 
-if(keyword.includes("원룸")) {
+/* 🦖 공룡 조건 */
+const heavy = keyword.length > 5 || Math.random() > 0.6;
 
-result = `
-<h2>🔍 ${keyword}</h2>
+if(heavy){
+  dino.style.display = "block";
+}
 
-<span class="badge ${lv}">경쟁 ${lv === "low" ? "낮음" : lv === "mid" ? "중간" : "높음"}</span>
-<span class="badge ${lv}">🔥 ${score}점</span>
+setTimeout(()=>{
+
+const s = score();
+
+result.innerHTML = `
+<h2>🔍 <b>${keyword}</b></h2>
+
+<span class="badge mid">🔥 ${s}점</span>
 
 <div class="meter">
-<div class="bar" style="width:${score}%"></div>
+<div class="bar" style="width:${s}%"></div>
 </div>
 
-${getNews(keyword)}
+<div id="stream"></div>
+`;
 
+const streamBox = document.getElementById("stream");
+
+stream(streamBox, [
+"🧠 데이터 수집 중...",
+"📊 SNS 분석 중...",
+"🔥 화제성 계산 중...",
+"✔ 완료!"
+]);
+
+setTimeout(()=>{
+
+dino.style.display="none";
+
+streamBox.innerHTML += news(keyword);
+
+streamBox.innerHTML += `
 <div class="section">
-<h3>👥 핵심 관심 ⭐</h3>
-<b>• 원룸 인테리어</b><br>
-<b>• 좁은 공간 활용</b><br>
-<b>• 가성비 가구 추천</b><br>
+<h3>👥 핵심 관심 ★</h3>
+<b>• ${keyword} 활용</b><br>
+<b>• 수익 구조</b><br>
+<b>• 시장 전망</b><br>
 </div>
 
 <div class="section">
-<h3>❓ 사람들이 궁금해하는 것 ⭐</h3>
-<b>• 10만원으로 꾸밀 수 있을까?</b><br>
-<b>• 수납 어떻게 하지?</b><br>
-<b>• 좁은 방 넓어 보이게 하는 법?</b><br>
+<h3>❓ 질문 ★</h3>
+<b>• 지금 시작해도 될까?</b><br>
+<b>• 돈이 될까?</b><br>
+<b>• 경쟁은 어떤가?</b><br>
 </div>
 `;
 
-}
+}, 2200);
 
-else if(keyword.includes("AI")) {
+}, 700);
 
-result = `
-<h2>🔍 ${keyword}</h2>
-
-<span class="badge ${lv}">경쟁 ${lv === "low" ? "낮음" : lv === "mid" ? "중간" : "높음"}</span>
-<span class="badge ${lv}">🔥 ${score}점</span>
-
-<div class="meter">
-<div class="bar" style="width:${score}%"></div>
-</div>
-
-${getNews(keyword)}
-
-<div class="section">
-<h3>❓ AI 질문 ⭐</h3>
-<b>• AI 활용법</b><br>
-<b>• 자동화 도구</b><br>
-<b>• 영상 제작 AI</b><br>
-</div>
-`;
-
-}
-
-else {
-
-result = `
-<div class="no-data">
-<div class="title">⚠️ 데이터 부족</div>
-<div class="desc">아직 분석 데이터가 충분하지 않습니다</div>
-</div>
-`;
-
-}
-
-document.getElementById("result").innerHTML = result;
 }
 
 </script>
