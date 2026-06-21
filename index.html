@@ -59,7 +59,7 @@ input {
   font-weight:800;
 }
 
-/* 추천 */
+/* 추천 박스 */
 .suggest-box {
   position:absolute;
   top:70px;
@@ -72,9 +72,11 @@ input {
   z-index:10;
 }
 
+/* ⭐ 핵심 수정: 흰색 */
 .suggest-box div {
   padding:12px;
   cursor:pointer;
+  color:white;
 }
 
 .suggest-box div:hover {
@@ -124,56 +126,52 @@ button {
 /* 섹션 */
 .section {
   margin-top:25px;
-  padding:18px;
+  padding:20px;
   border-left:5px solid #2563eb;
   background:#f8f9fa;
   border-radius:10px;
 }
 
-/* 강조 */
-.highlight {
-  font-weight:900;
+/* 🧠 중요 파란 강조 */
+.important {
   color:#2563eb;
+  font-weight:900;
 }
 
+/* ⭐ 별 강조 */
 .star {
   color:#facc15;
   font-weight:bold;
 }
 
-/* 로딩 */
-.loading {
-  color:#2563eb;
-  font-weight:bold;
-  margin-top:15px;
-}
-
-/* 🦖 공룡 */
-.dino {
-  display:none;
-  text-align:center;
-  font-size:70px;
+/* 뉴스 (최상위 핵심) */
+.news {
+  border-left:6px solid #2563eb;
+  background:#eef5ff;
+  padding:20px;
+  border-radius:10px;
   margin-top:20px;
-  animation:bounce 0.7s infinite;
 }
 
-.dino span {
-  display:block;
-  font-size:16px;
-  color:#3b82f6;
-  font-weight:900;
+/* no data */
+.no-data {
+  background:#1f1f1f;
+  border:2px solid #ff4d4d;
+  padding:30px;
+  border-radius:18px;
+  text-align:center;
 }
 
-@keyframes bounce {
-  0%,100% { transform:translateY(0); }
-  50% { transform:translateY(-12px); }
+.no-data .title {
+  font-size:22px;
+  font-weight:bold;
+  color:#ff4d4d;
 }
 
-/* 타이핑 */
-.typing {
-  display:inline-block;
-  border-right:2px solid #333;
-  margin:5px 0;
+.no-data .desc {
+  color:#ffb4a2;
+  font-size:15px;
+  margin-top:6px;
 }
 
 </style>
@@ -188,17 +186,14 @@ button {
 <div class="card">
 
 <div class="search-box">
-<input id="keyword" placeholder="키워드를 입력하세요"
-oninput="suggest(this.value)">
+<input id="keyword"
+placeholder="키워드를 입력하세요"
+oninput="suggest(this.value)"
+onblur="hideSuggest()">
+
 <button onclick="analyze()">분석</button>
 
 <div class="suggest-box" id="suggestBox"></div>
-</div>
-
-<!-- 🦖 공룡 로딩 -->
-<div id="dino" class="dino">
-🦖
-<span>기다려 주시오!!</span>
 </div>
 
 <div id="result"></div>
@@ -236,51 +231,43 @@ function select(v){
   document.getElementById("suggestBox").style.display="none";
 }
 
-/* ================= 점수 ================= */
+/* ⭐ 핵심 수정: 다른 클릭 시 자동 숨김 */
+function hideSuggest(){
+  setTimeout(()=>{
+    document.getElementById("suggestBox").style.display="none";
+  },150);
+}
+
+/* 점수 */
 function score(){
   return Math.floor(Math.random()*40 + 60);
 }
 
-/* ================= 뉴스 ================= */
+/* 📰 화제성 (최상위 중요 섹션) */
 function news(keyword){
   return `
-  <div class="section">
-    <h3>📰 화제성 분석 ★</h3>
-    <p><b>${keyword}</b>는 SNS / 유튜브 / 커뮤니티에서 빠르게 확산 중입니다.</p>
-    <p>검색량은 <b>상승 추세</b>이며 콘텐츠 수요도 증가 중 ★</p>
+  <div class="news">
+    <h3>📰 인터넷 화제성 분석 ★</h3>
+
+    <p><span class="important">${keyword}</span>는 현재  
+    <span class="important">SNS / 유튜브 / 뉴스</span> 전반에서  
+    <b>급격한 언급 증가</b>가 나타나는 키워드입니다 ⭐</p>
+
+    <p>특히 <span class="important">짧은 영상 콘텐츠</span> 중심으로 확산되며  
+    <b>트렌드 상위권 진입 가능성</b>이 높습니다 ⭐</p>
+
+    <p><b>핵심 요약:</b> <span class="important">현재 화제성 상승 구간</span> ⭐</p>
   </div>
   `;
 }
 
-/* ================= 스트리밍 ================= */
-function stream(el, arr, i=0){
-  if(i>=arr.length) return;
-
-  el.innerHTML += `<div class="typing">${arr[i]}</div><br>`;
-
-  setTimeout(()=>stream(el, arr, i+1), 500);
-}
-
-/* ================= 분석 ================= */
+/* 분석 */
 function analyze(){
 
 const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
 const result = document.getElementById("result");
-const dino = document.getElementById("dino");
-
-/* 초기 */
-result.innerHTML = `<div class="loading">🧠 분석 중...</div>`;
-
-/* 🦖 공룡 조건 */
-const heavy = keyword.length > 5 || Math.random() > 0.6;
-
-if(heavy){
-  dino.style.display = "block";
-}
-
-setTimeout(()=>{
 
 const s = score();
 
@@ -292,44 +279,30 @@ result.innerHTML = `
 <div class="meter">
 <div class="bar" style="width:${s}%"></div>
 </div>
-
-<div id="stream"></div>
 `;
 
-const streamBox = document.getElementById("stream");
+/* 📰 핵심 화제성 */
+result.innerHTML += news(keyword);
 
-stream(streamBox, [
-"🧠 데이터 수집 중...",
-"📊 SNS 분석 중...",
-"🔥 화제성 계산 중...",
-"✔ 완료!"
-]);
-
-setTimeout(()=>{
-
-dino.style.display="none";
-
-streamBox.innerHTML += news(keyword);
-
-streamBox.innerHTML += `
+/* 관심 */
+result.innerHTML += `
 <div class="section">
-<h3>👥 핵심 관심 ★</h3>
-<b>• ${keyword} 활용</b><br>
-<b>• 수익 구조</b><br>
-<b>• 시장 전망</b><br>
-</div>
-
-<div class="section">
-<h3>❓ 질문 ★</h3>
-<b>• 지금 시작해도 될까?</b><br>
-<b>• 돈이 될까?</b><br>
-<b>• 경쟁은 어떤가?</b><br>
+<h3>👥 핵심 관심 ⭐</h3>
+<b class="important">• ${keyword} 활용 방법</b><br>
+<b class="important">• 수익 구조 분석</b><br>
+<b class="important">• 시장 확장성</b><br>
 </div>
 `;
 
-}, 2200);
-
-}, 700);
+/* 질문 */
+result.innerHTML += `
+<div class="section">
+<h3>❓ 사람들이 궁금해하는 것 ⭐</h3>
+<b class="important">• 지금 시작해도 될까?</b><br>
+<b class="important">• 돈이 될까?</b><br>
+<b class="important">• 경쟁이 심한가?</b><br>
+</div>
+`;
 
 }
 
