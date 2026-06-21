@@ -23,15 +23,19 @@ body {
   padding:20px;
 }
 
-h1 { text-align:center; }
+h1 {
+  text-align:center;
+  font-size:2.2rem;
+}
 
 .card {
-  background:#fff;
+  background:white;
   color:#222;
   padding:30px;
   border-radius:20px;
 }
 
+/* 입력 */
 .search-box {
   display:flex;
   gap:10px;
@@ -43,8 +47,10 @@ input {
   border-radius:10px;
   background:#1f1f1f;
   color:white;
+  border:none;
 }
 
+/* 버튼 */
 button {
   padding:15px;
   background:#2563eb;
@@ -52,28 +58,29 @@ button {
   border:none;
   border-radius:10px;
   cursor:pointer;
+  transition:0.15s;
 }
 
 button:active {
   transform:scale(0.95);
 }
 
-/* badges */
+/* 배지 */
 .badge {
+  display:inline-block;
   padding:6px 10px;
   border-radius:8px;
   color:white;
   font-weight:bold;
-  display:inline-block;
-  margin-right:5px;
+  margin-right:6px;
 }
 
-/* 상태별 색 */
-.low { background:#22c55e; }
-.mid { background:#facc15; color:black; }
-.high { background:#ef4444; }
+/* 경쟁도 색상 */
+.low { background:#22c55e; }   /* 낮음 = 초록 */
+.mid { background:#facc15; color:black; } /* 중간 = 노랑 */
+.high { background:#ef4444; }  /* 높음 = 빨강 */
 
-/* meter */
+/* 점수 바 */
 .meter {
   height:10px;
   background:#ddd;
@@ -88,13 +95,24 @@ button:active {
   background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
 }
 
-/* no data */
+/* ⚠️ 데이터 부족 */
 .no-data {
   background:#1f1f1f;
   border:1px solid #ff4d4d;
   padding:20px;
   border-radius:15px;
   text-align:center;
+}
+
+.no-data .title {
+  font-size:18px;
+  font-weight:bold;
+}
+
+.no-data .desc {
+  color:#aaa;
+  font-size:13px;
+  margin-top:5px;
 }
 
 </style>
@@ -109,8 +127,8 @@ button:active {
 <div class="card">
 
 <div class="search-box">
-<input id="keyword" placeholder="키워드 입력">
-<button onclick="analyze()">분석</button>
+<input id="keyword" placeholder="키워드를 입력하세요">
+<button onclick="analyze()">분석하기</button>
 </div>
 
 <div id="result"></div>
@@ -120,14 +138,20 @@ button:active {
 
 <script>
 
-function getScore() {
-  return Math.floor(Math.random()*40+60);
+function scoreGen() {
+  return Math.floor(Math.random()*40 + 60);
 }
 
-function getCompetition(score) {
+function getLevel(score) {
   if(score < 70) return "low";
   if(score < 85) return "mid";
   return "high";
+}
+
+function getText(level) {
+  if(level === "low") return "경쟁 낮음";
+  if(level === "mid") return "경쟁 중간";
+  return "경쟁 매우 높음";
 }
 
 function analyze() {
@@ -135,13 +159,8 @@ function analyze() {
 const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
-let score = getScore();
-let comp = getCompetition(score);
-
-let compText =
-comp === "low" ? "경쟁 낮음" :
-comp === "mid" ? "경쟁 중간" :
-"경쟁 매우 높음";
+const score = scoreGen();
+const level = getLevel(score);
 
 let result = "";
 
@@ -150,8 +169,8 @@ if(keyword.includes("AI")) {
 result = `
 <h2>🔍 ${keyword}</h2>
 
-<span class="badge ${comp}">⚡ ${compText}</span>
-<span class="badge ${comp}">🔥 ${score}점</span>
+<span class="badge ${level}">${getText(level)}</span>
+<span class="badge ${level}">🔥 ${score}점</span>
 
 <div class="meter">
 <div class="bar" style="width:${score}%"></div>
@@ -161,15 +180,15 @@ result = `
 
 <h3>❓ 질문</h3>
 • AI 활용법<br>
-• 자동화 방법<br>
+• 자동화 도구<br>
 `;
 
 } else {
 
 result = `
 <div class="no-data">
-⚠️ 데이터 부족<br>
-<small>아직 분석 데이터가 없습니다</small>
+<div class="title">⚠️ 데이터 부족</div>
+<div class="desc">아직 충분한 분석 데이터가 없습니다</div>
 </div>
 `;
 
