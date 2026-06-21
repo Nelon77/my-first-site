@@ -16,11 +16,10 @@ body {
   background:#121212;
   color:white;
   font-family:Pretendard;
-  font-size:18px;
 }
 
 .container {
-  max-width:1100px;
+  max-width:1200px;
   margin:80px auto;
   padding:30px;
 }
@@ -31,14 +30,15 @@ h1 {
   margin-bottom:35px;
 }
 
+/* 카드 */
 .card {
   background:white;
   color:#222;
-  padding:45px;
-  border-radius:25px;
+  padding:50px;
+  border-radius:28px;
 }
 
-/* 검색 */
+/* 검색창 */
 .search-box {
   display:flex;
   gap:15px;
@@ -52,20 +52,12 @@ input {
   background:#1f1f1f;
   color:white;
   border:none;
-
   text-align:center;
   font-weight:700;
 }
 
-input::placeholder {
-  color:#888;
-  font-weight:500;
-  text-align:center;
-}
-
-/* 버튼 */
 button {
-  padding:20px 28px;
+  padding:20px 30px;
   font-size:18px;
   background:#2563eb;
   color:white;
@@ -74,27 +66,19 @@ button {
   cursor:pointer;
 }
 
-button:active {
-  transform:scale(0.95);
-}
-
-/* 배지 */
+/* 점수 배지 */
 .badge {
   display:inline-block;
-  padding:8px 12px;
+  padding:9px 14px;
   border-radius:10px;
   color:white;
   font-weight:bold;
   margin-right:8px;
 }
 
-.low { background:#16a34a; }
-.mid { background:#facc15; color:black; }
-.high { background:#ef4444; }
-
-/* 게이지 */
+/* meter */
 .meter {
-  height:16px;
+  height:18px;
   background:#ddd;
   border-radius:10px;
   overflow:hidden;
@@ -106,13 +90,17 @@ button:active {
   transition:0.5s;
 }
 
-/* 섹션 */
+/* 섹션 공통 */
 .section {
-  margin-top:25px;
+  margin-top:22px;
   padding:18px;
+  border-radius:12px;
+}
+
+/* 🔵 화제성 전용 배경 */
+.blue-bg {
+  background:#eef5ff;
   border-left:5px solid #2563eb;
-  background:#f8f9fa;
-  border-radius:10px;
 }
 
 /* 강조 */
@@ -121,16 +109,28 @@ button:active {
   color:#2563eb;
 }
 
+/* 점수 글자 */
+.score-text {
+  color:black;
+  font-weight:900;
+}
+
+/* 별 */
 .star {
   color:#facc15;
-  font-weight:bold;
+}
+
+/* 소제목 */
+h3 {
+  margin-bottom:10px;
 }
 
 /* 날짜 */
 .date {
   font-size:12px;
-  color:#333;
-  margin-top:-5px;
+  color:#000;
+  opacity:0.7;
+  margin-left:6px;
 }
 
 /* no data */
@@ -143,7 +143,7 @@ button:active {
 }
 
 .no-data .title {
-  font-size:22px;
+  font-size:20px;
   font-weight:bold;
   color:#ff4d4d;
 }
@@ -151,6 +151,7 @@ button:active {
 .no-data .desc {
   color:#ffb4a2;
   font-size:14px;
+  margin-top:6px;
 }
 
 </style>
@@ -176,136 +177,109 @@ button:active {
 
 <script>
 
-/* =========================
-   📅 7일 실제 날짜 계산
-========================= */
-function get7DayRange(){
+/* 🔥 7일 기준 날짜 계산 */
+function getWeekRange() {
   const now = new Date();
-  const past = new Date();
-  past.setDate(now.getDate() - 7);
+  const end = new Date(now);
+  const start = new Date(now);
+  start.setDate(now.getDate() - 6);
 
-  const f = (d)=> `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const fmt = (d) => `${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()}`;
 
-  return `${f(past)} ~ ${f(now)}`;
+  return `${fmt(start)} ~ ${fmt(end)}`;
 }
 
-/* =========================
-   📊 점수 (고정형)
-========================= */
-function getScore(keyword){
-  let base = 60;
-
-  if(keyword.includes("AI")) base = 85;
-  if(keyword.includes("원룸")) base = 78;
-  if(keyword.includes("코딩")) base = 88;
-
-  return base;
+/* 🔥 안정 점수 (7일 기준 고정) */
+function score(keyword) {
+  let hash = 0;
+  for (let i = 0; i < keyword.length; i++) {
+    hash = (hash * 31 + keyword.charCodeAt(i)) % 100;
+  }
+  return 40 + (hash % 61); // 40~100
 }
 
-/* =========================
-   🎨 색상 (세밀 연동)
-========================= */
-function getColor(score){
-  if(score <= 15) return "#0b6b2f";
-  if(score <= 30) return "#2ecc71";
-  if(score <= 45) return "#f1c40f";
-  if(score <= 60) return "#f39c12";
-  if(score <= 75) return "#e67e22";
-  if(score <= 85) return "#d35400";
-  return "#e74c3c";
+/* 🔥 색상 매핑 (요청한 구간 그대로) */
+function getColor(s) {
+  if (s <= 15) return "#0b6623";      // 진한 초록
+  if (s <= 30) return "#3cb371";      // 연두
+  if (s <= 45) return "#facc15";      // 노랑
+  if (s <= 60) return "#f59e0b";      // 노랑~주황
+  if (s <= 75) return "#f97316";      // 주황
+  if (s <= 85) return "#ea580c";      // 진한 주황
+  return "#ef4444";                   // 빨강
 }
 
-/* =========================
-   📰 화제성 (고정 + 확장)
-========================= */
+/* 🔵 화제성 뉴스 */
 function news(keyword){
-
   return `
-  <div class="section">
-    <h3>📰 인터넷 화제성 분석 ⭐</h3>
+  <div class="section blue-bg">
 
-    <div class="date">
-      (최근 분석 기간: ${get7DayRange()})
-    </div>
+    <h3>📰 인터넷 화제성 분석 ⭐
+      <span class="date">(${getWeekRange()})</span>
+    </h3>
 
     <p>
-      <b style="color:#2563eb;">
-      ${keyword}
-      </b>
-      는 최근 7일 기준으로 SNS, 유튜브, 커뮤니티에서 지속적으로 언급되고 있는 주제입니다.
+      <b>${keyword}</b> 관련 키워드는 최근 7일 기준
+      <span class="highlight">SNS / 유튜브 / 커뮤니티</span>에서 꾸준히 언급되고 있습니다.
     </p>
 
     <p>
-      특히 <b style="color:#2563eb;">짧은 영상 콘텐츠</b> 기반 확산이 두드러지며,
-      검색량과 관심도가 <b>동시에 유지되는 구조</b>를 보입니다.
+      특히 <b>짧은 콘텐츠 중심 확산</b>이 강하며,
+      검색량과 관심도가 동시에 유지되는 흐름입니다.
     </p>
 
     <p>
-      콘텐츠 소비 패턴은 <b>반복 탐색형</b>이며,
-      정보성 + 흥미성 혼합 구조가 강하게 나타납니다 ⭐
+      전체적으로 <b>화제성은 중~상위 수준</b>으로 분석됩니다 ⭐
     </p>
+
   </div>
   `;
 }
 
-/* =========================
-   👥 핵심 관심
-========================= */
+/* 👥 핵심 관심 */
 function interest(keyword){
   return `
   <div class="section">
     <h3>👥 핵심 관심 ⭐</h3>
 
-    <b style="color:#2563eb;font-weight:900;">
-      • ${keyword} 기본 구조
-    </b><br>
-
-    <b style="color:#2563eb;font-weight:900;">
-      • 활용 방법
-    </b><br>
-
-    <b style="color:#2563eb;font-weight:900;">
-      • 실전 적용 사례
-    </b><br>
+    <b>• ${keyword} 기본 이해</b><br>
+    <b>• 실생활 활용 방법</b><br>
+    <b>• 수익/응용 가능성</b><br>
   </div>
   `;
 }
 
-/* =========================
-   ❓ 질문
-========================= */
+/* ❓ 질문 */
 function questions(keyword){
   return `
   <div class="section">
     <h3>❓ 사람들이 궁금해하는 것 ⭐</h3>
 
-    <b>• ${keyword}는 왜 뜨는가?</b><br>
-    <b>• 지금 시작해도 되는가?</b><br>
-    <b>• 실제 수익성은 있는가?</b><br>
+    <b>• 지금 시작해도 될까?</b><br>
+    <b>• 실제로 돈이 될까?</b><br>
+    <b>• 경쟁은 어떤 수준일까?</b><br>
   </div>
   `;
 }
 
-/* =========================
-   🚀 분석 실행
-========================= */
+/* 🚀 분석 */
 function analyze(){
 
 const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
-const score = getScore(keyword);
-const color = getColor(score);
+const s = score(keyword);
+const color = getColor(s);
 
 let result = `
-<h2>🔍 ${keyword}</h2>
+<h2>🔍 <b>${keyword}</b></h2>
 
 <span class="badge" style="background:${color}">
-🔥 ${score}점
+🔥 <span class="score-text">${s}점</span>
 </span>
 
 <div class="meter">
-<div class="bar" style="width:${score}%;background:${color}"></div>
+<div class="bar" style="width:${s}%; background:${color}"></div>
 </div>
 `;
 
