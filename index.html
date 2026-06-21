@@ -1,252 +1,181 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧐 AI 트렌드 분석기</title>
 
-  <title>🧐 AI 트렌드 분석기</title>
+<link rel="stylesheet"
+href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet"
-    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+body {
+  margin:0;
+  background:#121212;
+  color:white;
+  font-family:Pretendard;
+}
 
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: #121212;
-      color: #ffffff;
-      font-family: "Pretendard", sans-serif;
-    }
+.container {
+  max-width:900px;
+  margin:50px auto;
+  padding:20px;
+}
 
-    .container {
-      max-width: 900px;
-      margin: 50px auto;
-      padding: 20px;
-    }
+h1 { text-align:center; }
 
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 2.4rem;
-      font-weight: 800;
-    }
+.card {
+  background:#fff;
+  color:#222;
+  padding:30px;
+  border-radius:20px;
+}
 
-    .card {
-      background: #ffffff;
-      color: #222;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.4);
-    }
+.search-box {
+  display:flex;
+  gap:10px;
+}
 
-    .search-box {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 20px;
-    }
+input {
+  flex:1;
+  padding:15px;
+  border-radius:10px;
+  background:#1f1f1f;
+  color:white;
+}
 
-    input {
-      flex: 1;
-      padding: 15px;
-      border-radius: 12px;
-      border: 2px solid #444;
-      background: #1f1f1f;
-      color: #fff;
-      font-size: 16px;
-    }
+button {
+  padding:15px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
 
-    input::placeholder {
-      color: #aaa;
-    }
+button:active {
+  transform:scale(0.95);
+}
 
-    button {
-      padding: 15px 25px;
-      border: none;
-      border-radius: 12px;
-      background: #2563eb;
-      color: white;
-      font-weight: bold;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
+/* badges */
+.badge {
+  padding:6px 10px;
+  border-radius:8px;
+  color:white;
+  font-weight:bold;
+  display:inline-block;
+  margin-right:5px;
+}
 
-    button:hover {
-      background: #1d4ed8;
-    }
+/* 상태별 색 */
+.low { background:#22c55e; }
+.mid { background:#facc15; color:black; }
+.high { background:#ef4444; }
 
-    button:active {
-      transform: scale(0.95);
-    }
+/* meter */
+.meter {
+  height:10px;
+  background:#ddd;
+  border-radius:10px;
+  overflow:hidden;
+  margin-top:10px;
+}
 
-    #result {
-      margin-top: 30px;
-      line-height: 1.8;
-    }
+.bar {
+  height:100%;
+  transition:0.5s;
+  background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
+}
 
-    .badge {
-      display: inline-block;
-      padding: 8px 12px;
-      border-radius: 10px;
-      color: white;
-      font-size: 13px;
-      font-weight: bold;
-      margin-right: 8px;
-    }
+/* no data */
+.no-data {
+  background:#1f1f1f;
+  border:1px solid #ff4d4d;
+  padding:20px;
+  border-radius:15px;
+  text-align:center;
+}
 
-    .hot { background: #ff5722; }
-    .up { background: #4caf50; }
-    .warn { background: #ff4d4d; }
-
-    hr {
-      border: none;
-      border-top: 1px solid #ddd;
-      margin: 20px 0;
-    }
-
-    /* 📊 게이지 */
-    .meter {
-      width: 100%;
-      height: 12px;
-      background: #333;
-      border-radius: 10px;
-      overflow: hidden;
-      margin-top: 10px;
-    }
-
-    .bar {
-      height: 100%;
-      background: linear-gradient(90deg, #ff4d4d, #ffb84d);
-      transition: width 0.5s ease;
-    }
-
-    /* ⚠️ 카드형 데이터 부족 */
-    .no-data-card {
-      background: #1f1f1f;
-      border: 1px solid #ff4d4d;
-      color: white;
-      padding: 20px;
-      border-radius: 16px;
-      text-align: center;
-      margin-top: 20px;
-      animation: fadeIn 0.4s ease;
-    }
-
-    .no-data-card .icon {
-      font-size: 30px;
-    }
-
-    .no-data-card .title {
-      font-weight: bold;
-      margin-top: 5px;
-    }
-
-    .no-data-card .desc {
-      color: #bbb;
-      font-size: 13px;
-      margin-top: 5px;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-  </style>
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <h1>🧐 AI 트렌드 분석기</h1>
+<h1>🧐 AI 트렌드 분석기</h1>
 
-  <div class="card">
+<div class="card">
 
-    <div class="search-box">
-      <input id="keyword" placeholder="키워드를 입력하세요">
-      <button onclick="analyze()">분석하기</button>
-    </div>
+<div class="search-box">
+<input id="keyword" placeholder="키워드 입력">
+<button onclick="analyze()">분석</button>
+</div>
 
-    <div id="result"></div>
+<div id="result"></div>
 
-  </div>
+</div>
 </div>
 
 <script>
 
-function fakeScore() {
-  return Math.floor(Math.random() * 40 + 60);
+function getScore() {
+  return Math.floor(Math.random()*40+60);
+}
+
+function getCompetition(score) {
+  if(score < 70) return "low";
+  if(score < 85) return "mid";
+  return "high";
 }
 
 function analyze() {
 
-  const keyword = document.getElementById("keyword").value.trim();
+const keyword = document.getElementById("keyword").value.trim();
+if(!keyword) return alert("입력하세요");
 
-  if (!keyword) {
-    alert("키워드를 입력하세요");
-    return;
-  }
+let score = getScore();
+let comp = getCompetition(score);
 
-  let score = fakeScore();
-  let result = "";
+let compText =
+comp === "low" ? "경쟁 낮음" :
+comp === "mid" ? "경쟁 중간" :
+"경쟁 매우 높음";
 
-  if (keyword.includes("원룸")) {
+let result = "";
 
-    result = `
-      <h2>🔍 ${keyword}</h2>
+if(keyword.includes("AI")) {
 
-      <span class="badge hot">🔥 화제성 ${score}점</span>
-      <span class="badge up">📈 상승</span>
-      <span class="badge warn">⚠️ 경쟁 중간</span>
+result = `
+<h2>🔍 ${keyword}</h2>
 
-      <div class="meter">
-        <div class="bar" style="width:${score}%"></div>
-      </div>
+<span class="badge ${comp}">⚡ ${compText}</span>
+<span class="badge ${comp}">🔥 ${score}점</span>
 
-      <hr>
+<div class="meter">
+<div class="bar" style="width:${score}%"></div>
+</div>
 
-      <h3>❓ 사람들이 궁금해하는 것</h3>
-      • 좁은 방 꾸미기 방법<br>
-      • 10만원 인테리어<br>
-    `;
+<hr>
 
-  } else if (keyword.includes("AI") || keyword.includes("인공지능")) {
+<h3>❓ 질문</h3>
+• AI 활용법<br>
+• 자동화 방법<br>
+`;
 
-    result = `
-      <h2>🔍 ${keyword}</h2>
+} else {
 
-      <span class="badge hot">🔥 화제성 ${score}점</span>
-      <span class="badge up">📈 급상승</span>
-      <span class="badge warn">⚠️ 경쟁 높음</span>
+result = `
+<div class="no-data">
+⚠️ 데이터 부족<br>
+<small>아직 분석 데이터가 없습니다</small>
+</div>
+`;
 
-      <div class="meter">
-        <div class="bar" style="width:${score}%"></div>
-      </div>
+}
 
-      <hr>
-
-      <h3>❓ 사람들이 궁금해하는 것</h3>
-      • AI 활용법<br>
-      • 자동화 도구<br>
-    `;
-
-  } else {
-
-    result = `
-      <div class="no-data-card">
-        <div class="icon">⚠️</div>
-        <div class="title">데이터 부족</div>
-        <div class="desc">아직 충분한 분석 데이터가 없습니다</div>
-      </div>
-    `;
-  }
-
-  document.getElementById("result").innerHTML = result;
+document.getElementById("result").innerHTML = result;
 }
 
 </script>
