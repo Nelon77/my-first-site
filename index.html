@@ -45,19 +45,21 @@ h1 {
   position:relative;
 }
 
-/* 🦖 공룡 알림 */
+/* 🦖 공룡 (대형 중앙, 1초) */
 .dino {
-  position:absolute;
-  top:-60px;
+  position:fixed;
+  top:50%;
   left:50%;
-  transform:translateX(-50%);
+  transform:translate(-50%,-50%);
   background:#fff;
   color:#000;
-  padding:10px 18px;
-  border-radius:12px;
-  font-weight:800;
+  padding:30px 50px;
+  border-radius:20px;
+  font-size:28px;
+  font-weight:900;
   display:none;
-  box-shadow:0 5px 15px rgba(0,0,0,0.3);
+  box-shadow:0 10px 30px rgba(0,0,0,0.4);
+  z-index:999;
 }
 
 /* input */
@@ -73,7 +75,7 @@ input {
   font-weight:800;
 }
 
-/* 버튼 */
+/* button */
 button {
   padding:20px 30px;
   font-size:18px;
@@ -84,7 +86,7 @@ button {
   cursor:pointer;
 }
 
-/* 배지 */
+/* badge */
 .badge {
   display:inline-block;
   padding:10px 14px;
@@ -94,7 +96,6 @@ button {
   margin-right:8px;
 }
 
-/* 점수 색상 */
 .low { background:#22c55e; }
 .mid { background:#facc15; color:black; }
 .high { background:#ef4444; }
@@ -110,7 +111,6 @@ button {
 
 .bar {
   height:100%;
-  transition:0.5s;
   background:linear-gradient(90deg,#22c55e,#facc15,#ef4444);
 }
 
@@ -139,13 +139,16 @@ button {
   margin-left:6px;
 }
 
-/* 강조 */
-.blue {
-  color:#2563eb;
-  font-weight:900;
+/* 날짜 */
+.date {
+  font-size:13px;
+  color:#666;
+  margin-top:5px;
 }
 
-h3 { margin-bottom:10px; }
+h3 {
+  margin-bottom:10px;
+}
 
 </style>
 </head>
@@ -185,32 +188,38 @@ function level(s){
   return "high";
 }
 
-/* 🦖 공룡 표시 */
+/* 🦖 공룡 (1초 표시) */
 function showDino(){
   const dino = document.getElementById("dino");
   dino.style.display = "block";
 
   setTimeout(()=>{
     dino.style.display = "none";
-  }, 2500);
+  }, 1000);
 }
 
-/* 🔥 점수 색상 */
-function badgeColor(lv){
-  if(lv === "low") return "#22c55e";
-  if(lv === "mid") return "#facc15";
-  return "#ef4444";
+/* 날짜 범위 */
+function getDateRange(){
+  const now = new Date();
+  const past = new Date();
+  past.setDate(now.getDate() - 7);
+
+  const format = (d)=> d.toISOString().split("T")[0];
+
+  return `${format(past)} ~ ${format(now)} 기준`;
 }
 
-/* 뉴스 (확장됨) */
+/* 뉴스 */
 function news(keyword){
   return `
   <div class="news">
     <h3>📰 인터넷 화제성 분석<span class="star">★</span></h3>
 
-    <p><b>${keyword}</b>는 현재 SNS / 유튜브 / 커뮤니티 전반에서 빠르게 확산 중입니다.</p>
+    <div class="date">${getDateRange()}</div>
 
-    <p>검색량 증가 + 짧은 영상 콘텐츠 중심 확산이 동시에 발생하고 있으며  
+    <p><b>${keyword}</b>는 SNS / 유튜브 / 커뮤니티에서 빠르게 확산 중입니다.</p>
+
+    <p>검색량 증가 + 짧은 영상 콘텐츠 확산이 동시에 발생하고 있으며  
     <b>트렌드 민감도가 높은 주제</b>로 분석됩니다.</p>
 
     <p><b>최근 7일 기준 화제성 상승 흐름</b> 📈</p>
@@ -218,7 +227,7 @@ function news(keyword){
   `;
 }
 
-/* 관심 */
+/* 핵심 관심 */
 function interest(keyword){
   return `
   <div class="section">
@@ -248,12 +257,10 @@ function analyze(){
 const keyword = document.getElementById("keyword").value.trim();
 if(!keyword) return alert("입력하세요");
 
-/* 🦖 공룡 먼저 */
 showDino();
 
 const s = score();
 const lv = level(s);
-const color = badgeColor(lv);
 
 const result = document.getElementById("result");
 
@@ -262,9 +269,7 @@ setTimeout(()=>{
 result.innerHTML = `
 <h2>🔍 <b>${keyword}</b></h2>
 
-<span class="badge" style="background:${color}">
-🔥 ${s}점
-</span>
+<span class="badge ${lv}">🔥 ${s}점</span>
 
 <div class="meter">
 <div class="bar" style="width:${s}%"></div>
@@ -275,7 +280,7 @@ ${interest(keyword)}
 ${questions()}
 `;
 
-}, 300);
+}, 200);
 
 }
 
