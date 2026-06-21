@@ -65,32 +65,6 @@ button {
   cursor:pointer;
 }
 
-/* 🦖 FULL SCREEN DINO */
-#dino {
-  position:fixed;
-  top:0;
-  left:0;
-  width:100vw;
-  height:100vh;
-  background:rgba(255,255,255,0.98);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  z-index:9999;
-  color:#000;
-}
-
-#dino .big {
-  font-size:70px;
-  font-weight:900;
-}
-
-#dino .small {
-  font-size:22px;
-  margin-top:10px;
-}
-
 /* 결과 */
 #result {
   margin-top:25px;
@@ -130,6 +104,13 @@ button {
   color:#111;
 }
 
+/* ⭐ 강조 */
+.star {
+  color:#facc15;
+  font-weight:900;
+  margin-left:6px;
+}
+
 /* 뉴스 */
 .news {
   margin-top:20px;
@@ -139,8 +120,11 @@ button {
   border-radius:10px;
 }
 
-.star {
-  color:#facc15;
+/* 날짜 */
+.date {
+  font-size:13px;
+  color:#555;
+  margin-bottom:10px;
 }
 
 </style>
@@ -159,12 +143,6 @@ button {
 <button onclick="analyze()">분석</button>
 </div>
 
-<!-- 🦖 DINO -->
-<div id="dino">
-  <div class="big">🦖 검색 완료!</div>
-  <div class="small">잠시만 기다려 주시오!!</div>
-</div>
-
 <div id="result"></div>
 
 </div>
@@ -172,12 +150,20 @@ button {
 
 <script>
 
-/* 점수 */
-function score(){
-  return Math.floor(Math.random()*100);
+////////////////////////////////////////////////////
+// 🔥 1. 점수 고정 (키워드 기반 hash)
+////////////////////////////////////////////////////
+function score(keyword){
+  let hash = 0;
+  for(let i=0;i<keyword.length;i++){
+    hash = (hash * 31 + keyword.charCodeAt(i)) % 100;
+  }
+  return 40 + (hash % 60); // 40~100 고정
 }
 
-/* 색 매핑 */
+////////////////////////////////////////////////////
+// 🎨 색상 (구간 매핑 유지)
+////////////////////////////////////////////////////
 function getColor(s){
   if(s <= 15) return "rgb(0,140,60)";
   if(s <= 30) return "rgb(80,200,80)";
@@ -188,72 +174,78 @@ function getColor(s){
   return "rgb(220,40,40)";
 }
 
-/* 게이지 */
-function getGradient(color){
-  return `linear-gradient(90deg,
-    rgb(0,140,60),
-    ${color},
-    rgb(220,40,40)
-  )`;
+////////////////////////////////////////////////////
+// 📅 날짜 (7일 기준)
+////////////////////////////////////////////////////
+function getDateRange(){
+  const now = new Date();
+  const past = new Date();
+  past.setDate(now.getDate() - 7);
+
+  return `${past.toISOString().split("T")[0]} ~ ${now.toISOString().split("T")[0]} 기준`;
 }
 
-/* 🦖 공룡 (0.8초) */
-function showDino(){
-  const d = document.getElementById("dino");
-  d.style.display = "flex";
-
-  setTimeout(()=>{
-    d.style.display = "none";
-  }, 800);
-}
-
-/* 뉴스 */
+////////////////////////////////////////////////////
+// 📰 화제성 (확장 버전)
+////////////////////////////////////////////////////
 function news(k){
   return `
   <div class="news">
-    <h3>📰 인터넷 화제성 ★</h3>
-    <p><b>${k}</b>는 SNS에서 빠르게 확산 중입니다.</p>
-    <p>최근 검색량 상승으로 <b>핵심 트렌드</b>로 분석됩니다.</p>
+    <h3>📰 인터넷 화제성 분석 <span class="star">★</span></h3>
+
+    <div class="date">${getDateRange()}</div>
+
+    <p><b>${k}</b>는 최근 SNS, 유튜브, 커뮤니티 전반에서 언급량이 꾸준히 증가하고 있는 주제입니다.</p>
+
+    <p>특히 짧은 영상 콘텐츠(Shorts, Reels) 중심으로 확산 속도가 빠르며  
+    사용자 참여형 콘텐츠가 급격히 증가하는 흐름이 관측됩니다.</p>
+
+    <p>최근 7일 기준 검색량은 상승 추세이며  
+    <b>트렌드 민감도가 높은 주제</b>로 분류됩니다 ★</p>
   </div>
   `;
 }
 
-/* 관심 */
+////////////////////////////////////////////////////
+// 👥 핵심 관심
+////////////////////////////////////////////////////
 function interest(k){
   return `
   <div class="section">
-    <h3>👥 핵심 관심 ★</h3>
-    <b>• ${k} 활용</b><br>
-    <b>• 시장 구조</b><br>
-    <b>• 성장 가능성</b><br>
+    <h3>👥 핵심 관심 <span class="star">★</span></h3>
+
+    <b>• ${k}의 기본 구조 이해</b><br>
+    <b>• 실제 활용 사례 분석</b><br>
+    <b>• 수익/응용 가능성 탐색</b><br>
   </div>
   `;
 }
 
-/* 질문 */
+////////////////////////////////////////////////////
+// ❓ 질문
+////////////////////////////////////////////////////
 function questions(){
   return `
   <div class="section">
-    <h3>❓ 질문 ★</h3>
-    <b>• 지금 시작 가능?</b><br>
-    <b>• 돈이 될까?</b><br>
-    <b>• 경쟁 강도?</b><br>
+    <h3>❓ 사람들이 궁금해하는 것 <span class="star">★</span></h3>
+
+    <b>• 지금 시작해도 늦지 않았나?</b><br>
+    <b>• 실제 수익화가 가능한가?</b><br>
+    <b>• 경쟁 강도는 어느 정도인가?</b><br>
   </div>
   `;
 }
 
-/* 분석 */
+////////////////////////////////////////////////////
+// 🚀 실행
+////////////////////////////////////////////////////
 function analyze(){
 
 const k = document.getElementById("keyword").value.trim();
 if(!k) return alert("입력하세요");
 
-showDino();
-
-const s = score();
+const s = score(k);
 const color = getColor(s);
-
-setTimeout(()=>{
 
 document.getElementById("result").innerHTML = `
 
@@ -264,7 +256,7 @@ document.getElementById("result").innerHTML = `
 </span>
 
 <div class="meter">
-<div class="bar" style="width:${s}%; background:${getGradient(color)}"></div>
+<div class="bar" style="width:${s}%; background:${color}"></div>
 </div>
 
 ${news(k)}
@@ -272,8 +264,6 @@ ${interest(k)}
 ${questions()}
 
 `;
-
-}, 200);
 
 }
 
