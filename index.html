@@ -18,20 +18,9 @@ body{
 }
 
 .container{
-  max-width:1050px;
+  max-width:1100px;
   margin:50px auto;
   padding:20px;
-}
-
-h1{
-  text-align:center;
-  margin-bottom:10px;
-}
-
-.subtitle{
-  text-align:center;
-  color:#aaa;
-  margin-bottom:30px;
 }
 
 /* INPUT */
@@ -60,15 +49,23 @@ button{
   background:#0072ff;
   color:white;
   cursor:pointer;
-  font-weight:700;
 }
 
 /* GRID */
 .grid{
-  display:grid;
+  display:none;
   grid-template-columns:1fr 1fr;
   gap:15px;
-  display:none;
+}
+
+.grid.show{
+  display:grid;
+  animation:fade 0.4s ease;
+}
+
+@keyframes fade{
+  from {opacity:0; transform:translateY(10px);}
+  to {opacity:1; transform:translateY(0);}
 }
 
 /* CARD */
@@ -77,7 +74,15 @@ button{
   padding:18px;
   border-radius:14px;
   margin-top:15px;
-  display:none;
+
+  opacity:0;
+  transform:translateY(20px);
+  transition:0.4s ease;
+}
+
+.card.show{
+  opacity:1;
+  transform:translateY(0);
 }
 
 /* BOX */
@@ -94,11 +99,6 @@ button{
   font-weight:800;
 }
 
-.small{
-  opacity:0.7;
-  font-size:13px;
-}
-
 </style>
 </head>
 
@@ -106,146 +106,118 @@ button{
 
 <div class="container">
 
-  <h1>🧐 AI 키워드 검색·분석기</h1>
+<h1>🧐 AI 키워드 검색·분석기</h1>
 
-  <p class="subtitle">
-    최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다.
-  </p>
+<p class="subtitle">
+최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다.
+</p>
 
-  <div class="search-box">
-    <input id="keyword" placeholder="키워드 입력" />
-    <button onclick="startSearch()">분석</button>
+<div class="search-box">
+  <input id="keyword" placeholder="키워드 입력" />
+  <button onclick="startSearch()">분석</button>
+</div>
+
+<!-- DASHBOARD -->
+<div class="grid" id="dashboard">
+
+  <div class="card" id="c1">
+    <h3>🔥 경쟁도</h3>
+    <p id="competitionText"></p>
   </div>
 
-  <!-- DASHBOARD -->
-  <div class="grid" id="dashboard">
-
-    <div class="card">
-      <h3>🔥 경쟁도</h3>
-      <p id="competitionText">0</p>
-    </div>
-
-    <div class="card">
-      <h3>📈 트렌드</h3>
-      <p id="trendText">0</p>
-    </div>
-
+  <div class="card" id="c2">
+    <h3>📈 트렌드</h3>
+    <p id="trendText"></p>
   </div>
 
-  <!-- HOT -->
-  <div class="card" id="hotCard">
-    <h3>📊 인터넷 화제성 분석</h3>
-    <div id="hotTopic"></div>
-  </div>
+</div>
 
-  <!-- MARKET -->
-  <div class="card" id="marketCard">
-    <h3>📊 시장 구조 분석</h3>
-    <div id="marketAnalysis"></div>
-  </div>
+<!-- HOT -->
+<div class="card" id="hotCard">
+  <h3>📊 인터넷 화제성 분석</h3>
+  <div id="hotTopic"></div>
+</div>
 
-  <!-- REPORT -->
-  <div class="card" id="reportCard">
-    <h3>🧠 AI 리포트</h3>
-    <div id="report"></div>
-  </div>
+<!-- MARKET -->
+<div class="card" id="marketCard">
+  <h3>📊 시장 구조 분석</h3>
+  <div id="marketAnalysis"></div>
+</div>
+
+<!-- REPORT -->
+<div class="card" id="reportCard">
+  <h3>🧠 AI 리포트</h3>
+  <div id="report"></div>
+</div>
 
 </div>
 
 <script>
 
+function show(el){
+  setTimeout(()=> el.classList.add("show"), 60);
+}
+
 async function startSearch(){
 
-  try {
+  const keyword = document.getElementById("keyword").value;
+  if(!keyword) return alert("키워드 입력");
 
-    const keyword = document.getElementById("keyword").value;
+  const res = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
+  const data = await res.json();
 
-    if(!keyword || !keyword.trim()){
-      alert("키워드를 입력하세요");
-      return;
-    }
+  document.getElementById("dashboard").classList.add("show");
 
-    // UI show
-    document.getElementById("dashboard").style.display = "grid";
-    document.getElementById("hotCard").style.display = "block";
-    document.getElementById("marketCard").style.display = "block";
-    document.getElementById("reportCard").style.display = "block";
+  document.getElementById("competitionText").innerText = data.meta.competition;
+  document.getElementById("trendText").innerText = data.meta.trendScore;
 
-    const res = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
-    const data = await res.json();
+  show(document.getElementById("c1"));
+  show(document.getElementById("c2"));
+  show(document.getElementById("hotCard"));
+  show(document.getElementById("marketCard"));
+  show(document.getElementById("reportCard"));
 
-    console.log("DEBUG DATA:", data);
+  // HOT
+  document.getElementById("hotTopic").innerHTML = `
+    <div class="box"><b>요약:</b><br>${data.hotTopic.summary}</div>
+    <div class="box"><b>이유:</b><br>${data.hotTopic.reasons.join("<br>")}</div>
+    <div class="box"><b>판단:</b><br>${data.hotTopic.insight}</div>
+  `;
 
-    // 안전 출력
-    document.getElementById("competitionText").innerText = data.meta?.competition ?? 0;
-    document.getElementById("trendText").innerText = data.meta?.trendScore ?? 0;
+  // MARKET
+  document.getElementById("marketAnalysis").innerHTML = `
+    <div class="box">${data.marketAnalysis.structure}</div>
+    <div class="box">${data.marketAnalysis.entry}</div>
+    <div class="box">${data.marketAnalysis.profit}</div>
+  `;
 
-    // 📊 인터넷 화제성 (완전 안전)
-    const reasons = data.hotTopic?.reasons ?? [];
+  // REPORT
+  document.getElementById("report").innerHTML = `
+    <h2><span class="blue">${data.keyword}</span> 분석 리포트</h2>
 
-    document.getElementById("hotTopic").innerHTML = `
-      <div class="box">
-        <b>요약:</b><br>${data.hotTopic?.summary ?? "데이터 없음"}
-      </div>
+    <div class="box">
+      <b>왜 인기인가?</b><br><br>
+      ${data.report.whyPopular}
+    </div>
 
-      <div class="box">
-        <b>이유:</b><br>
-        ${reasons.length ? reasons.map(r => `• ${r}`).join("<br>") : "정보 없음"}
-      </div>
+    <div class="box">
+      <b>장점:</b><br>${data.report.pros}
+    </div>
 
-      <div class="box">
-        <b>판단:</b><br>${data.hotTopic?.insight ?? ""}
-      </div>
+    <div class="box">
+      <b>단점:</b><br>${data.report.cons}
+    </div>
 
-      <div class="box">
-        <b>7일 검색량:</b> <span class="blue">${(data.meta?.searchVolume7d ?? 0).toLocaleString()}</span>
-      </div>
-    `;
+    <div class="box">
+      <b>7일 검색량:</b> ${data.report.searchVolume7d.toLocaleString()}<br>
+      <b>언급량:</b> ${data.report.newsCount}
+    </div>
 
-    // 📊 시장 구조
-    document.getElementById("marketAnalysis").innerHTML = `
-      <div class="box">${data.marketAnalysis?.structure ?? ""}</div>
-      <div class="box">${data.marketAnalysis?.entry ?? ""}</div>
-      <div class="box">${data.marketAnalysis?.profit ?? ""}</div>
-    `;
-
-    // 🧠 AI 리포트 (핵심 개선)
-    document.getElementById("report").innerHTML = `
-      <h2><span class="blue">${data.keyword}</span> 분석 리포트</h2>
-
-      <div class="box">
-        <b>카테고리:</b> <span class="blue">${data.meta?.category}</span>
-      </div>
-
-      <div class="box">
-        <b>트렌드 상태:</b> <span class="blue">${data.meta?.intensity}</span>
-        / ${data.meta?.trendState}
-      </div>
-
-      <div class="box">
-        <b>감정 분석:</b> ${data.meta?.sentiment}
-      </div>
-
-      <div class="box">
-        <b>핵심 AI 분석:</b><br><br>
-
-        <span class="blue">${data.keyword}</span>는 단순 검색어가 아니라<br>
-        <b>실제 온라인 관심이 형성되고 있는 주제</b>입니다.<br><br>
-
-        최근 <span class="blue">${data.meta?.searchVolume7d?.toLocaleString()}</span>회의 검색과<br>
-        <span class="blue">${data.meta?.newsCount}</span>개의 언급이 확인되며,<br><br>
-
-        현재는 <span class="blue">${data.meta?.intensity}</span> 단계로 판단됩니다.<br><br>
-
-        시장에서는 <span class="blue">${data.meta?.trendState}</span> 흐름이며,<br>
-        경쟁 수준은 <span class="blue">${data.meta?.competition}</span>입니다.
-      </div>
-    `;
-
-  } catch (err) {
-    console.error(err);
-    alert("분석 실패 (콘솔 확인)");
-  }
+    <div class="box">
+      <b>🧠 AI 개인 견해:</b><br><br>
+      <span class="blue">${data.report.aiOpinion}</span>
+    </div>
+  `;
 }
 
 </script>
