@@ -7,405 +7,293 @@
 <title>🧐 AI 키워드 검색·분석기</title>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
-*{
-  box-sizing:border-box;
-}
-
 body{
   margin:0;
-  background:#121212;
+  background:#0f1115;
   color:white;
   font-family:Pretendard,sans-serif;
 }
 
 .container{
-  max-width:1200px;
-  margin:70px auto;
-  padding:30px;
+  max-width:1100px;
+  margin:50px auto;
+  padding:20px;
 }
 
+/* HEADER */
 h1{
   text-align:center;
-  font-size:2.7rem;
   margin-bottom:10px;
 }
 
 .subtitle{
   text-align:center;
-  color:#bdbdbd;
-  font-size:15px;
+  color:#aaa;
   margin-bottom:30px;
 }
 
-.card{
-  background:white;
-  color:#222;
-  padding:45px;
-  border-radius:25px;
-}
-
+/* INPUT */
 .search-box{
   display:flex;
   gap:10px;
+  margin-bottom:20px;
 }
 
 input{
   flex:1;
-  padding:18px;
-  font-size:18px;
+  padding:14px;
   border-radius:10px;
-  background:#1f1f1f;
-  color:white;
   border:none;
-  text-align:center;
+  background:#1a1d25;
+  color:white;
   font-weight:700;
-}
-
-input::placeholder{
-  color:#bdbdbd;
 }
 
 button{
-  padding:18px 26px;
-  font-size:18px;
-  background:#2563eb;
-  color:white;
+  padding:14px 20px;
   border:none;
   border-radius:10px;
+  background:#0072ff;
+  color:white;
   cursor:pointer;
-  font-weight:700;
-  transition:.2s;
 }
 
-button:hover{
-  background:#1d4ed8;
+/* GRID */
+.grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
 }
 
-button:disabled{
-  background:#94a3b8;
-  cursor:not-allowed;
+/* CARD */
+.card{
+  background:#1a1d25;
+  padding:18px;
+  border-radius:14px;
+  margin-top:15px;
+}
+
+/* GAUGE */
+.bar{
+  width:100%;
+  height:12px;
+  background:#222;
+  border-radius:10px;
+  overflow:hidden;
+}
+
+.fill{
+  height:100%;
+  width:0%;
+  transition:0.3s;
+}
+
+/* OUTPUT (리포트형 복구 핵심) */
+.output{
+  white-space:pre-wrap;
+  line-height:1.7;
+  min-height:150px;
+  font-size:14px;
+}
+
+/* CHART */
+canvas{
+  width:100% !important;
+  max-height:300px;
 }
 
 .badge{
   display:inline-block;
-  padding:10px 14px;
-  border-radius:12px;
-  color:black;
+  padding:6px 10px;
+  border-radius:8px;
   font-weight:900;
-}
-
-.meter{
-  height:16px;
-  background:#e5e7eb;
-  border-radius:10px;
-  overflow:hidden;
-  margin-top:15px;
-}
-
-.bar{
-  height:100%;
-  transition:all .5s ease;
-}
-
-.section{
-  margin-top:24px;
-  padding:20px;
-  border-left:4px solid #2563eb;
-  background:#f5f7ff;
-  border-radius:12px;
-}
-
-.section h3{
-  margin-top:0;
-  margin-bottom:8px;
-}
-
-.highlight{
-  font-weight:900;
-  color:#2563eb;
-}
-
-.star{
-  color:#facc15;
-}
-
-.loading{
-  color:#2563eb;
-  font-size:18px;
-  font-weight:800;
-  margin-top:20px;
-}
-
-.no-data{
-  background:#111;
-  color:white;
-  border:2px solid #ff4d4d;
-  padding:25px;
-  border-radius:15px;
-  text-align:center;
-  margin-top:20px;
-}
-
-ul{
-  padding-left:20px;
-}
-
-li{
-  margin-bottom:10px;
-  line-height:1.8;
-}
-
-.date{
-  color:#555;
-  font-size:13px;
-  margin-bottom:10px;
-}
-
-.section p{
-  line-height:1.9;
-  word-break:keep-all;
-}
-
-@media(max-width:768px){
-
-  .container{
-    padding:18px;
-    margin:30px auto;
-  }
-
-  .card{
-    padding:24px;
-  }
-
-  h1{
-    font-size:2rem;
-  }
-
-  .search-box{
-    flex-direction:column;
-  }
-
-  button{
-    width:100%;
-  }
-
+  margin-top:10px;
 }
 
 </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
+  <!-- TITLE -->
   <h1>🧐 AI 키워드 검색·분석기</h1>
+  <p class="subtitle">리포트 + 대시보드 통합 AI 분석 시스템</p>
 
-  <p class="subtitle">
-    최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다
-  </p>
+  <!-- INPUT -->
+  <div class="search-box">
+    <input id="keyword" placeholder="키워드 입력 (예: 원룸, 아이폰, 코인)" />
+    <button onclick="startSearch()">분석</button>
+  </div>
 
-  <div class="card">
+  <!-- DASHBOARD -->
+  <div class="grid">
 
-    <div class="search-box">
-
-      <input
-        id="keyword"
-        type="text"
-        placeholder="검색할 키워드를 입력하세요"
-        autocomplete="off"
-      >
-
-      <button id="analyzeBtn" onclick="analyze()">
-        분석
-      </button>
-
+    <div class="card">
+      <h3>🔥 경쟁도</h3>
+      <div class="bar"><div id="competitionBar" class="fill"></div></div>
+      <p id="competitionText">0</p>
     </div>
 
-    <div id="result"></div>
+    <div class="card">
+      <h3>📈 트렌드</h3>
+      <div class="bar"><div id="trendBar" class="fill"></div></div>
+      <p id="trendText">0</p>
+    </div>
 
+  </div>
+
+  <!-- CHARTS -->
+  <div class="card">
+    <h3>📊 핵심 지표 비교</h3>
+    <canvas id="chart1"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>📊 시장 구조 분석</h3>
+    <canvas id="chart2"></canvas>
+  </div>
+
+  <!-- REPORT (🔥 기존 감성 복구) -->
+  <div class="card">
+    <h3>🧠 AI 리포트 분석</h3>
+    <div id="output" class="output"></div>
   </div>
 
 </div>
 
 <script>
 
-function getColor(score){
+let chart1, chart2;
 
-  if(score <= 15) return "#0a8f3c";
-  if(score <= 30) return "#7ddc6f";
-  if(score <= 45) return "#facc15";
-  if(score <= 60) return "#f59e0b";
-  if(score <= 75) return "#f97316";
-  if(score <= 85) return "#ea580c";
-
-  return "#ef4444";
+/* 색상 */
+function getColor(v){
+  if(v >= 80) return "#ff3b3b";
+  if(v >= 50) return "#ffb020";
+  return "#2ecc71";
 }
 
-function getDateRange(){
+/* 게이지 */
+function animateGauge(id, textId, value){
+  let current = 0;
 
-  const end = new Date();
-  const start = new Date();
+  const bar = document.getElementById(id);
+  const text = document.getElementById(textId);
 
-  start.setDate(end.getDate() - 6);
+  const timer = setInterval(()=>{
+    current += 2;
 
-  const format = (date) => {
+    if(current >= value){
+      current = value;
+      clearInterval(timer);
+    }
 
-    const y = date.getFullYear();
-    const m = String(date.getMonth() + 1).padStart(2,"0");
-    const d = String(date.getDate()).padStart(2,"0");
+    bar.style.width = current + "%";
+    bar.style.background = getColor(current);
+    text.innerText = current;
+  }, 15);
+}
 
-    return `${y}.${m}.${d}`;
+/* CHART 1 */
+function renderChart1(meta){
+
+  const ctx = document.getElementById("chart1");
+
+  if(chart1) chart1.destroy();
+
+  chart1 = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:["경쟁도","트렌드"],
+      datasets:[{
+        label:"점수",
+        data:[meta.competition, meta.trendScore],
+        backgroundColor:["#ff3b3b","#2ecc71"]
+      }]
+    }
+  });
+}
+
+/* CHART 2 */
+function renderChart2(){
+
+  const ctx = document.getElementById("chart2");
+
+  if(chart2) chart2.destroy();
+
+  chart2 = new Chart(ctx,{
+    type:"bar",
+    data:{
+      labels:["검색수요","경쟁강도","성장성","진입난이도"],
+      datasets:[{
+        label:"시장 구조",
+        data:[92,90,88,70],
+        backgroundColor:"#0072ff"
+      }]
+    }
+  });
+}
+
+/* MAIN */
+function startSearch(){
+
+  const keyword = document.getElementById("keyword").value;
+
+  if(!keyword) return alert("키워드를 입력하세요");
+
+  document.getElementById("output").innerText = "";
+
+  const eventSource = new EventSource(
+    `/api/analyze?keyword=${encodeURIComponent(keyword)}`
+  );
+
+  eventSource.onmessage = (event)=>{
+
+    const data = JSON.parse(event.data);
+
+    /* META */
+    if(data.type === "meta"){
+      animateGauge("competitionBar","competitionText",data.data.competition);
+      animateGauge("trendBar","trendText",data.data.trendScore);
+
+      renderChart1(data.data);
+      renderChart2();
+
+      /* 🔥 리포트 상단 배지 */
+      document.getElementById("output").innerHTML =
+        `<div class="badge" style="background:${getColor(data.data.competition)}">
+          경쟁도 ${data.data.competition} / 트렌드 ${data.data.trendScore}
+        </div>\n\n`;
+    }
+
+    /* STREAM TEXT (리포트 복구 핵심) */
+    if(data.type === "chunk"){
+      document.getElementById("output").innerText += data.data;
+    }
+
+    /* ERROR */
+    if(data.type === "error"){
+      document.getElementById("output").innerText =
+        "⚠️ " + data.message;
+    }
+
+    if(data.type === "done"){
+      eventSource.close();
+    }
   };
 
-  return `${format(start)} ~ ${format(end)}`;
+  eventSource.onerror = ()=>{
+    document.getElementById("output").innerText =
+      "⚠️ 서버 연결 실패";
+    eventSource.close();
+  };
 }
-
-async function analyze(){
-
-  const keyword = document
-    .getElementById("keyword")
-    .value
-    .trim();
-
-  if(!keyword){
-    alert("키워드를 입력하세요.");
-    return;
-  }
-
-  const result = document.getElementById("result");
-  const button = document.getElementById("analyzeBtn");
-
-  button.disabled = true;
-  button.innerText = "분석 중...";
-
-  result.innerHTML = `
-    <div class="loading">
-      🔄 AI가 최근 7일 데이터를 분석 중입니다...
-    </div>
-  `;
-
-  try{
-
-    const response = await fetch(
-      `/api/analyze?keyword=${encodeURIComponent(keyword)}`
-    );
-
-    const data = await response.json();
-
-    if(!response.ok){
-      throw new Error(data.error || "API 오류");
-    }
-
-    const score = data.score ?? 50;
-    const color = getColor(score);
-
-    const trend = data.trend ?? "분석 데이터가 없습니다.";
-    const summary = data.summary ?? "분석 데이터가 없습니다.";
-    const questions = data.questions ?? [];
-
-    result.innerHTML = `
-
-      <h2>
-        🔍 <span class="highlight">${keyword}</span>
-      </h2>
-
-      <div style="margin:18px 0;">
-
-        <span
-          class="badge"
-          style="background:${color};"
-        >
-          🔥 ${score}점
-        </span>
-
-      </div>
-
-      <div class="meter">
-
-        <div
-          class="bar"
-          style="
-            width:${score}%;
-            background:${color};
-          "
-        ></div>
-
-      </div>
-
-      <div class="section">
-
-        <h3>
-          📰 인터넷 화제성 분석
-          <span class="star">⭐</span>
-        </h3>
-
-        <div class="date">
-          (${getDateRange()})
-        </div>
-
-        <p>${summary}</p>
-
-      </div>
-
-      <div class="section">
-
-        <h3>
-          📈 핵심 관심사
-          <span class="star">⭐</span>
-        </h3>
-
-        <p>${trend}</p>
-
-      </div>
-
-      <div class="section">
-
-        <h3>
-          ❓ 사람들이 궁금해하는 것
-          <span class="star">⭐</span>
-        </h3>
-
-        ${
-          questions.length
-            ? `<ul>${questions.map(q => `<li>${q}</li>`).join("")}</ul>`
-            : `<p>관련 질문 데이터가 없습니다.</p>`
-        }
-
-      </div>
-
-    `;
-
-  }catch(error){
-
-    console.error(error);
-
-    result.innerHTML = `
-      <div class="no-data">
-        ⚠️ 분석 중 오류가 발생했습니다.
-        <br><br>
-        ${error.message}
-      </div>
-    `;
-
-  }finally{
-
-    button.disabled = false;
-    button.innerText = "분석";
-  }
-}
-
-document
-  .getElementById("keyword")
-  .addEventListener("keypress", function(event){
-
-    if(event.key === "Enter"){
-      analyze();
-    }
-
-  });
 
 </script>
 
