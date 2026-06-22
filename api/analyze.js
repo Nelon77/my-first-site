@@ -41,19 +41,19 @@ function calculateTrend(newsCount) {
   return 20;
 }
 
-// 🧠 AI 자기검수
+// 🧠 AI 자기검수 엔진
 async function aiSelfReview(model, keyword, analysisText, meta) {
   const reviewPrompt = `
 너는 GLET AI 검수 엔진이다.
 
-아래 분석 결과를 검수하고 오류나 과장, 논리 문제를 수정하라.
+아래 분석 결과를 검수하고 문제를 수정하라.
 
-기준:
+📌 기준:
 - 논리 오류
-- 트렌드 과장
+- 과장된 트렌드 판단
 - 키워드 부족
 - 구조 불명확
-- 잘못된 판단
+- 잘못된 정보
 
 키워드: ${keyword}
 
@@ -65,9 +65,9 @@ async function aiSelfReview(model, keyword, analysisText, meta) {
 1차 분석:
 ${analysisText}
 
-규칙:
-- 문제 있으면 수정본만 출력
-- 문제 없으면 OK만 출력
+📌 규칙:
+- 문제 있으면 "수정본만"
+- 문제 없으면 "OK"
 `;
 
   const result = await model.generateContent(reviewPrompt);
@@ -95,7 +95,7 @@ export default async function handler(req, res) {
   };
 
   try {
-    // 1️⃣ 뉴스
+    // 1️⃣ 뉴스 수집
     const news = await fetchNews(keyword);
 
     const competition = calculateCompetition(news.length);
@@ -110,14 +110,14 @@ export default async function handler(req, res) {
     const prompt = `
 너는 GLET AI 키워드 트렌드 분석 엔진이다.
 
-키워드:
-${keyword}
+키워드: ${keyword}
 
-뉴스 수: ${news.length}
-경쟁도: ${competition}
-트렌드 점수: ${trendScore}
+📊 데이터:
+- 뉴스 수: ${news.length}
+- 경쟁도: ${competition}
+- 트렌드 점수: ${trendScore}
 
-다음을 포함해서 분석:
+다음을 포함:
 1. 키워드 의미
 2. 시장 분석
 3. 핵심 키워드 5개
@@ -132,16 +132,20 @@ ${keyword}
 
     let fullAnalysis = "";
 
-    // 4️⃣ 뉴스 먼저 전달
+    // 4️⃣ 뉴스 먼저 전송
     send({ type: "news", data: news });
 
-    // 5️⃣ 메타데이터
+    // 5️⃣ 메트릭 전송 (🔥 차트용 핵심 데이터)
     send({
       type: "meta",
-      data: { competition, trendScore, newsCount: news.length },
+      data: {
+        competition,
+        trendScore,
+        newsCount: news.length,
+      },
     });
 
-    // 6️⃣ 스트리밍
+    // 6️⃣ 스트리밍 분석
     for await (const chunk of result.stream) {
       const text = chunk.text();
       if (text) {
@@ -171,7 +175,16 @@ ${keyword}
       data: review,
     });
 
-    // 8️⃣ 추천 키워드
+    // 8️⃣ 차트용 데이터 (🔥 중요)
+    send({
+      type: "chart",
+      data: [
+        { type: "경쟁도", score: competition },
+        { type: "트렌드", score: trendScore },
+      ],
+    });
+
+    // 9️⃣ 추천 키워드
     const suggestPrompt = `
 키워드: ${keyword}
 
@@ -191,7 +204,7 @@ ${keyword}
       data: suggestions,
     });
 
-    // 9️⃣ 종료
+    // 🔟 종료
     send({ type: "done" });
     res.end();
   } catch (err) {
