@@ -2,7 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// 🔎 뉴스 수집 (키워드 기반 검색 데이터)
+// 🔎 뉴스 수집
 async function fetchNews(keyword) {
   try {
     const res = await fetch(
@@ -25,6 +25,55 @@ async function fetchNews(keyword) {
   }
 }
 
+// 📊 경쟁도
+function calculateCompetition(newsCount) {
+  if (newsCount >= 5) return 90;
+  if (newsCount >= 3) return 70;
+  if (newsCount >= 1) return 50;
+  return 20;
+}
+
+// 📈 트렌드 점수
+function calculateTrend(newsCount) {
+  if (newsCount >= 5) return 85;
+  if (newsCount >= 3) return 65;
+  if (newsCount >= 1) return 45;
+  return 20;
+}
+
+// 🧠 AI 자기검수
+async function aiSelfReview(model, keyword, analysisText, meta) {
+  const reviewPrompt = `
+너는 GLET AI 검수 엔진이다.
+
+아래 분석 결과를 검수하고 오류나 과장, 논리 문제를 수정하라.
+
+기준:
+- 논리 오류
+- 트렌드 과장
+- 키워드 부족
+- 구조 불명확
+- 잘못된 판단
+
+키워드: ${keyword}
+
+메타:
+- 뉴스 수: ${meta.newsCount}
+- 경쟁도: ${meta.competition}
+- 트렌드 점수: ${meta.trendScore}
+
+1차 분석:
+${analysisText}
+
+규칙:
+- 문제 있으면 수정본만 출력
+- 문제 없으면 OK만 출력
+`;
+
+  const result = await model.generateContent(reviewPrompt);
+  return result.response.text();
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET") {
     return res.status(405).json({ error: "GET만 허용" });
@@ -36,7 +85,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "키워드를 입력하세요" });
   }
 
-  // 🔥 SSE (스트리밍)
+  // SSE 설정
   res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
   res.setHeader("Cache-Control", "no-cache, no-transform");
   res.setHeader("Connection", "keep-alive");
@@ -46,49 +95,58 @@ export default async function handler(req, res) {
   };
 
   try {
-    // 1️⃣ 관련 데이터 수집
+    // 1️⃣ 뉴스
     const news = await fetchNews(keyword);
+
+    const competition = calculateCompetition(news.length);
+    const trendScore = calculateTrend(news.length);
 
     // 2️⃣ Gemini 모델
     const model = genAI.getGenerativeModel({
       model: "gemini-1.5-flash",
     });
 
-    // 3️⃣ 핵심 프롬프트 (📌 키워드 분석기 역할)
+    // 3️⃣ 분석 프롬프트
     const prompt = `
-너는 "AI 키워드 분석 엔진"이다.
+너는 GLET AI 키워드 트렌드 분석 엔진이다.
 
-목표:
-사용자가 입력한 키워드를 기반으로
-검색 + 의미 + 트렌드 + 확장 키워드를 구조적으로 분석한다.
+키워드:
+${keyword}
 
-키워드: ${keyword}
+뉴스 수: ${news.length}
+경쟁도: ${competition}
+트렌드 점수: ${trendScore}
 
-아래 형식으로 출력:
-
-1. 🔍 키워드 의미 분석
-2. 📊 현재 검색/화제성 상태 (높음/중간/낮음 + 이유)
-3. 🧠 핵심 키워드 5개
-4. 🔗 연관 키워드 (확장 검색용)
-5. ❓ 사람들이 실제로 검색하는 질문 5개
-6. 📈 트렌드 방향 (상승/하락/정체)
-
-참고 뉴스 데이터:
-${JSON.stringify(news)}
+다음을 포함해서 분석:
+1. 키워드 의미
+2. 시장 분석
+3. 핵심 키워드 5개
+4. 연관 키워드 5개
+5. 사용자 질문 5개
+6. 트렌드 판단
+7. 경쟁도 해석
+8. 전략
 `;
 
     const result = await model.generateContentStream(prompt);
 
-    // 4️⃣ 뉴스 먼저 전달 (UI용)
+    let fullAnalysis = "";
+
+    // 4️⃣ 뉴스 먼저 전달
+    send({ type: "news", data: news });
+
+    // 5️⃣ 메타데이터
     send({
-      type: "news",
-      data: news,
+      type: "meta",
+      data: { competition, trendScore, newsCount: news.length },
     });
 
-    // 5️⃣ 스트리밍 분석 결과
+    // 6️⃣ 스트리밍
     for await (const chunk of result.stream) {
       const text = chunk.text();
       if (text) {
+        fullAnalysis += text;
+
         send({
           type: "chunk",
           data: text,
@@ -96,7 +154,44 @@ ${JSON.stringify(news)}
       }
     }
 
-    // 6️⃣ 완료
+    // 7️⃣ AI 자기검수
+    const review = await aiSelfReview(
+      model,
+      keyword,
+      fullAnalysis,
+      {
+        competition,
+        trendScore,
+        newsCount: news.length,
+      }
+    );
+
+    send({
+      type: "review",
+      data: review,
+    });
+
+    // 8️⃣ 추천 키워드
+    const suggestPrompt = `
+키워드: ${keyword}
+
+연관 검색어 5개 JSON 배열:
+["", "", "", "", ""]
+`;
+
+    const suggestResult = await model.generateContent(suggestPrompt);
+
+    let suggestions = [];
+    try {
+      suggestions = JSON.parse(suggestResult.response.text());
+    } catch {}
+
+    send({
+      type: "suggestions",
+      data: suggestions,
+    });
+
+    // 9️⃣ 종료
     send({ type: "done" });
     res.end();
   } catch (err) {
@@ -104,7 +199,7 @@ ${JSON.stringify(news)}
 
     send({
       type: "error",
-      message: "키워드 분석 실패",
+      message: "GLET 분석 실패",
     });
 
     res.end();
