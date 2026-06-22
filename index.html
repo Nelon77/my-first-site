@@ -18,7 +18,7 @@ body{
 }
 
 .container{
-  max-width:1000px;
+  max-width:1050px;
   margin:50px auto;
   padding:20px;
 }
@@ -29,7 +29,7 @@ h1{
   margin-bottom:10px;
 }
 
-/* SUBTITLE */
+/* SUBTITLE (고정 요구) */
 .subtitle{
   text-align:center;
   color:#aaa;
@@ -99,13 +99,19 @@ button{
 
 /* REPORT */
 .report{
-  line-height:1.7;
-  font-size:15px;
+  line-height:1.75;
 }
 
 .blue{
   color:#3b82f6;
   font-weight:800;
+}
+
+.box{
+  margin-top:10px;
+  padding:12px;
+  background:#151925;
+  border-radius:10px;
 }
 
 .small{
@@ -138,13 +144,11 @@ button{
 
     <div class="card">
       <h3>🔥 경쟁도</h3>
-      <div class="bar"><div id="competitionBar" class="fill"></div></div>
       <p id="competitionText">0</p>
     </div>
 
     <div class="card">
       <h3>📈 트렌드</h3>
-      <div class="bar"><div id="trendBar" class="fill"></div></div>
       <p id="trendText">0</p>
     </div>
 
@@ -152,7 +156,7 @@ button{
 
   <!-- HOT -->
   <div class="card" id="hotCard">
-    <h3>📊 인터넷 화제성</h3>
+    <h3>📊 인터넷 화제성 분석</h3>
     <div id="hotTopic"></div>
   </div>
 
@@ -172,78 +176,78 @@ button{
 
 <script>
 
-function animate(barId,textId,value){
-  let cur=0;
-  const bar=document.getElementById(barId);
-  const text=document.getElementById(textId);
-
-  const t=setInterval(()=>{
-    cur+=2;
-    if(cur>=value){cur=value;clearInterval(t);}
-    bar.style.width=cur+"%";
-    text.innerText=cur;
-  },15);
-}
-
-function renderReport(data){
-
-  document.getElementById("report").innerHTML = `
-    <div class="small">AI 키워드 분석 리포트</div>
-
-    <h2><span class="blue">${data.keyword}</span> 분석 결과</h2>
-
-    <p>
-      현재 <span class="blue">${data.keyword}</span>는
-      <span class="blue">${data.intensity}</span> 상태이며,
-      시장 반응은 <span class="blue">${data.trendState}</span> 흐름을 보이고 있습니다.
-    </p>
-
-    <p>
-      경쟁도는 <span class="blue">${data.competition}</span> 수준으로
-      ${data.competition > 75 ? "높은 경쟁 환경" : "진입 가능한 수준"}입니다.
-    </p>
-
-    <p>
-      트렌드 점수는 <span class="blue">${data.trendScore}</span>이며,
-      ${data.trendScore > 70 ? "확산 속도가 빠른 키워드" : "완만한 변화 흐름"}입니다.
-    </p>
-
-    <p>
-      최근 <span class="blue">${data.newsCount}</span>개의 데이터가 확인되며
-      현재는 <span class="blue">${data.opportunity}</span> 단계로 판단됩니다.
-    </p>
-  `;
-}
-
 async function startSearch(){
 
   const keyword=document.getElementById("keyword").value;
   if(!keyword) return alert("키워드 입력");
 
+  // SHOW UI
   document.getElementById("dashboard").style.display="grid";
   document.getElementById("hotCard").style.display="block";
   document.getElementById("marketCard").style.display="block";
   document.getElementById("reportCard").style.display="block";
-
-  document.getElementById("hotTopic").innerText="분석 중...";
-  document.getElementById("marketAnalysis").innerText="분석 중...";
-  document.getElementById("report").innerText="분석 중...";
 
   try{
 
     const res = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
     const data = await res.json();
 
-    animate("competitionBar","competitionText",data.meta.competition);
-    animate("trendBar","trendText",data.meta.trendScore);
+    // 📊 기본 출력
+    document.getElementById("competitionText").innerText = data.meta.competition;
+    document.getElementById("trendText").innerText = data.meta.trendScore;
 
-    document.getElementById("hotTopic").innerText = data.hotTopic;
-    document.getElementById("marketAnalysis").innerText = data.marketAnalysis;
+    // 📊 인터넷 화제성
+    document.getElementById("hotTopic").innerHTML = `
+      <div class="box"><b>요약:</b> ${data.hotTopic.summary}</div>
 
-    renderReport(data.report);
+      <div class="box">
+        <b>이유:</b>
+        <ul>
+          ${data.hotTopic.reasons.map(r => `<li>${r}</li>`).join("")}
+        </ul>
+      </div>
 
-  } catch(e){
-    document.getElementById("report").innerText="⚠️ 오류 발생";
+      <div class="box"><b>판단:</b> ${data.hotTopic.insight}</div>
+
+      <div class="box">
+        <b>7일 검색량:</b> <span class="blue">${data.meta.searchVolume7d.toLocaleString()}</span>
+      </div>
+    `;
+
+    // 📊 시장 구조
+    document.getElementById("marketAnalysis").innerHTML = `
+      <div class="box">${data.marketAnalysis.structure}</div>
+      <div class="box">${data.marketAnalysis.entry}</div>
+      <div class="box">${data.marketAnalysis.profit}</div>
+    `;
+
+    // 🧠 AI 리포트 (강화 버전)
+    document.getElementById("report").innerHTML = `
+      <h2><span class="blue">${data.keyword}</span> 분석 리포트</h2>
+
+      <div class="box">
+        <b>카테고리:</b> <span class="blue">${data.category}</span>
+      </div>
+
+      <div class="box">
+        <b>트렌드 상태:</b> <span class="blue">${data.intensity}</span> / ${data.trendState}
+      </div>
+
+      <div class="box">
+        <b>핵심 분석:</b><br><br>
+
+        ${data.keyword}는 단순 검색어가 아니라<br>
+        <span class="blue">${data.category}</span> 영역에서 실제로 관심이 형성되는 주제입니다.<br><br>
+
+        현재 <span class="blue">${data.meta.searchVolume7d.toLocaleString()}</span>회의 검색량과<br>
+        <span class="blue">${data.meta.newsCount}</span>개의 뉴스/커뮤니티 언급이 발생하고 있으며,<br><br>
+
+        이는 <span class="blue">${data.intensity}</span> 단계의 관심 흐름으로 판단됩니다.<br><br>
+
+        특히 경쟁도 <span class="blue">${data.meta.competition}</span> 기준으로 볼 때<br>
+        ${data.meta.competition > 75 ? "이미 경쟁이 치열한 구조" : "아직 확장 가능한 구조"}입니다.
+      </div>
+    `;
   }
 }
 
