@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>🧐 AI 키워드 검색기</title>
+<title>🧐 AI 키워드 검색·분석기</title>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 
@@ -30,6 +30,13 @@ body{
 h1{
   text-align:center;
   font-size:2.7rem;
+  margin-bottom:10px;
+}
+
+.subtitle{
+  text-align:center;
+  color:#bdbdbd;
+  font-size:15px;
   margin-bottom:30px;
 }
 
@@ -70,10 +77,16 @@ button{
   border-radius:10px;
   cursor:pointer;
   font-weight:700;
+  transition:.2s;
 }
 
 button:hover{
   background:#1d4ed8;
+}
+
+button:disabled{
+  background:#94a3b8;
+  cursor:not-allowed;
 }
 
 .badge{
@@ -142,12 +155,18 @@ ul{
 
 li{
   margin-bottom:10px;
-  line-height:1.6;
+  line-height:1.8;
 }
 
 .date{
   color:#555;
   font-size:13px;
+  margin-bottom:10px;
+}
+
+.section p{
+  line-height:1.9;
+  word-break:keep-all;
 }
 
 @media(max-width:768px){
@@ -182,7 +201,11 @@ li{
 
 <div class="container">
 
-  <h1>🧐 AI 트렌드 브리핑</h1>
+  <h1>🧐 AI 키워드 검색·분석기</h1>
+
+  <p class="subtitle">
+    최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다
+  </p>
 
   <div class="card">
 
@@ -191,11 +214,11 @@ li{
       <input
         id="keyword"
         type="text"
-        placeholder="키워드를 입력하세요"
+        placeholder="검색할 키워드를 입력하세요"
         autocomplete="off"
       >
 
-      <button onclick="analyze()">
+      <button id="analyzeBtn" onclick="analyze()">
         분석
       </button>
 
@@ -209,7 +232,6 @@ li{
 
 <script>
 
-/* 🎨 점수 색상 */
 function getColor(score){
 
   if(score <= 15) return "#0a8f3c";
@@ -222,7 +244,6 @@ function getColor(score){
   return "#ef4444";
 }
 
-/* 📅 최근 7일 */
 function getDateRange(){
 
   const end = new Date();
@@ -242,7 +263,6 @@ function getDateRange(){
   return `${format(start)} ~ ${format(end)}`;
 }
 
-/* 🚀 분석 */
 async function analyze(){
 
   const keyword = document
@@ -256,6 +276,10 @@ async function analyze(){
   }
 
   const result = document.getElementById("result");
+  const button = document.getElementById("analyzeBtn");
+
+  button.disabled = true;
+  button.innerText = "분석 중...";
 
   result.innerHTML = `
     <div class="loading">
@@ -269,18 +293,18 @@ async function analyze(){
       `/api/analyze?keyword=${encodeURIComponent(keyword)}`
     );
 
-    if(!response.ok){
-      throw new Error("API 오류");
-    }
-
     const data = await response.json();
 
-    const score = data.score || 50;
+    if(!response.ok){
+      throw new Error(data.error || "API 오류");
+    }
+
+    const score = data.score ?? 50;
     const color = getColor(score);
 
-    const trend = data.trend || "분석 중";
-    const summary = data.summary || "분석 데이터가 없습니다.";
-    const questions = data.questions || [];
+    const trend = data.trend ?? "분석 데이터가 없습니다.";
+    const summary = data.summary ?? "분석 데이터가 없습니다.";
+    const questions = data.questions ?? [];
 
     result.innerHTML = `
 
@@ -322,9 +346,7 @@ async function analyze(){
           (${getDateRange()})
         </div>
 
-        <p style="line-height:1.8;">
-          ${summary}
-        </p>
+        <p>${summary}</p>
 
       </div>
 
@@ -335,9 +357,7 @@ async function analyze(){
           <span class="star">⭐</span>
         </h3>
 
-        <p style="line-height:1.8;">
-          ${trend}
-        </p>
+        <p>${trend}</p>
 
       </div>
 
@@ -366,13 +386,17 @@ async function analyze(){
       <div class="no-data">
         ⚠️ 분석 중 오류가 발생했습니다.
         <br><br>
-        API 설정을 확인해주세요.
+        ${error.message}
       </div>
     `;
+
+  }finally{
+
+    button.disabled = false;
+    button.innerText = "분석";
   }
 }
 
-/* 엔터키 검색 */
 document
   .getElementById("keyword")
   .addEventListener("keypress", function(event){
