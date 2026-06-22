@@ -279,7 +279,55 @@ ${question(k)}
 
 }
 
-</script>
+<script>
+async function analyze() {
 
+  const keyword = document
+    .getElementById("keyword")
+    .value
+    .trim();
+
+  if (!keyword) {
+    alert("키워드를 입력하세요.");
+    return;
+  }
+
+  const result = document.getElementById("result");
+
+  result.innerHTML = "🔍 AI가 분석 중입니다...";
+
+  try {
+
+    const res = await fetch(
+      `/api/analyze?keyword=${encodeURIComponent(keyword)}`
+    );
+
+    const data = await res.json();
+
+    result.innerHTML = `
+      <h2>${keyword}</h2>
+
+      <p>🔥 ${data.score}점</p>
+
+      <p>📈 ${data.trend}</p>
+
+      <div class="section">
+        <h3>📰 인터넷 화제성 분석 ⭐</h3>
+        <p>${data.summary}</p>
+      </div>
+    `;
+
+  } catch (error) {
+
+    result.innerHTML = `
+      <div class="no-data">
+        분석 중 오류가 발생했습니다.
+      </div>
+    `;
+
+    console.error(error);
+  }
+}
+</script>
 </body>
 </html>
