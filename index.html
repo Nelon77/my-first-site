@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>🧐 AI 키워드 검색·분석기</title>
+<title>🧐 AI 키워드 분석기</title>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -15,7 +15,7 @@ body{
   margin:0;
   background:#0f1115;
   color:white;
-  font-family:Pretendard,sans-serif;
+  font-family:Pretendard, sans-serif;
 }
 
 .container{
@@ -36,7 +36,7 @@ h1{
   margin-bottom:30px;
 }
 
-/* INPUT */
+/* SEARCH */
 .search-box{
   display:flex;
   gap:10px;
@@ -45,12 +45,15 @@ h1{
 
 input{
   flex:1;
-  padding:14px;
-  border-radius:10px;
+  padding:18px;
+  border-radius:12px;
   border:none;
   background:#1a1d25;
   color:white;
-  font-weight:700;
+
+  font-weight:900;
+  font-size:20px;
+  text-align:center;
 }
 
 button{
@@ -60,6 +63,7 @@ button{
   background:#0072ff;
   color:white;
   cursor:pointer;
+  font-weight:700;
 }
 
 /* GRID */
@@ -67,6 +71,7 @@ button{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:15px;
+  display:none;
 }
 
 /* CARD */
@@ -75,9 +80,10 @@ button{
   padding:18px;
   border-radius:14px;
   margin-top:15px;
+  display:none;
 }
 
-/* GAUGE */
+/* BAR */
 .bar{
   width:100%;
   height:12px;
@@ -92,48 +98,38 @@ button{
   transition:0.3s;
 }
 
-/* OUTPUT (리포트형 복구 핵심) */
+/* OUTPUT */
 .output{
   white-space:pre-wrap;
   line-height:1.7;
-  min-height:150px;
-  font-size:14px;
+  min-height:120px;
 }
 
-/* CHART */
 canvas{
   width:100% !important;
   max-height:300px;
 }
 
-.badge{
-  display:inline-block;
-  padding:6px 10px;
-  border-radius:8px;
-  font-weight:900;
-  margin-top:10px;
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- TITLE -->
-  <h1>🧐 AI 키워드 검색·분석기</h1>
-  <p class="subtitle">리포트 + 대시보드 통합 AI 분석 시스템</p>
+  <h1>🧐 AI 키워드 분석기</h1>
 
-  <!-- INPUT -->
+  <p class="subtitle">
+    최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다.
+  </p>
+
   <div class="search-box">
-    <input id="keyword" placeholder="키워드 입력 (예: 원룸, 아이폰, 코인)" />
+    <input id="keyword" placeholder="" />
     <button onclick="startSearch()">분석</button>
   </div>
 
   <!-- DASHBOARD -->
-  <div class="grid">
+  <div class="grid" id="dashboard">
 
     <div class="card">
       <h3>🔥 경쟁도</h3>
@@ -149,19 +145,20 @@ canvas{
 
   </div>
 
-  <!-- CHARTS -->
-  <div class="card">
-    <h3>📊 핵심 지표 비교</h3>
-    <canvas id="chart1"></canvas>
+  <!-- 1. 인터넷 화제성 -->
+  <div class="card" id="hotCard">
+    <h3>📊 인터넷 화제성</h3>
+    <div id="hotTopic"></div>
   </div>
 
-  <div class="card">
+  <!-- 2. 시장 구조 -->
+  <div class="card" id="marketCard">
     <h3>📊 시장 구조 분석</h3>
-    <canvas id="chart2"></canvas>
+    <div id="marketAnalysis"></div>
   </div>
 
-  <!-- REPORT (🔥 기존 감성 복구) -->
-  <div class="card">
+  <!-- 3. AI 리포트 -->
+  <div class="card" id="reportCard">
     <h3>🧠 AI 리포트 분석</h3>
     <div id="output" class="output"></div>
   </div>
@@ -170,128 +167,95 @@ canvas{
 
 <script>
 
-let chart1, chart2;
-
-/* 색상 */
 function getColor(v){
   if(v >= 80) return "#ff3b3b";
   if(v >= 50) return "#ffb020";
   return "#2ecc71";
 }
 
-/* 게이지 */
-function animateGauge(id, textId, value){
-  let current = 0;
-
-  const bar = document.getElementById(id);
+function animateGauge(barId, textId, value){
+  let cur = 0;
+  const bar = document.getElementById(barId);
   const text = document.getElementById(textId);
 
-  const timer = setInterval(()=>{
-    current += 2;
-
-    if(current >= value){
-      current = value;
-      clearInterval(timer);
+  const t = setInterval(()=>{
+    cur += 2;
+    if(cur >= value){
+      cur = value;
+      clearInterval(t);
     }
 
-    bar.style.width = current + "%";
-    bar.style.background = getColor(current);
-    text.innerText = current;
+    bar.style.width = cur + "%";
+    bar.style.background = getColor(cur);
+    text.innerText = cur;
   }, 15);
 }
 
-/* CHART 1 */
-function renderChart1(meta){
-
-  const ctx = document.getElementById("chart1");
-
-  if(chart1) chart1.destroy();
-
-  chart1 = new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:["경쟁도","트렌드"],
-      datasets:[{
-        label:"점수",
-        data:[meta.competition, meta.trendScore],
-        backgroundColor:["#ff3b3b","#2ecc71"]
-      }]
-    }
-  });
-}
-
-/* CHART 2 */
-function renderChart2(){
-
-  const ctx = document.getElementById("chart2");
-
-  if(chart2) chart2.destroy();
-
-  chart2 = new Chart(ctx,{
-    type:"bar",
-    data:{
-      labels:["검색수요","경쟁강도","성장성","진입난이도"],
-      datasets:[{
-        label:"시장 구조",
-        data:[92,90,88,70],
-        backgroundColor:"#0072ff"
-      }]
-    }
-  });
-}
-
-/* MAIN */
 function startSearch(){
 
   const keyword = document.getElementById("keyword").value;
-
   if(!keyword) return alert("키워드를 입력하세요");
 
+  /* UI 표시 */
+  document.getElementById("dashboard").style.display = "grid";
+  document.getElementById("hotCard").style.display = "block";
+  document.getElementById("marketCard").style.display = "block";
+  document.getElementById("reportCard").style.display = "block";
+
   document.getElementById("output").innerText = "";
+  document.getElementById("hotTopic").innerText = "";
+  document.getElementById("marketAnalysis").innerText = "";
 
-  const eventSource = new EventSource(
-    `/api/analyze?keyword=${encodeURIComponent(keyword)}`
-  );
+  const es = new EventSource(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
 
-  eventSource.onmessage = (event)=>{
+  es.onmessage = (e)=>{
 
-    const data = JSON.parse(event.data);
+    const d = JSON.parse(e.data);
 
     /* META */
-    if(data.type === "meta"){
-      animateGauge("competitionBar","competitionText",data.data.competition);
-      animateGauge("trendBar","trendText",data.data.trendScore);
+    if(d.type === "meta"){
 
-      renderChart1(data.data);
-      renderChart2();
+      animateGauge("competitionBar","competitionText",d.data.competition);
+      animateGauge("trendBar","trendText",d.data.trendScore);
 
-      /* 🔥 리포트 상단 배지 */
-      document.getElementById("output").innerHTML =
-        `<div class="badge" style="background:${getColor(data.data.competition)}">
-          경쟁도 ${data.data.competition} / 트렌드 ${data.data.trendScore}
-        </div>\n\n`;
+      const newsCount = d.data.newsCount || 0;
+
+      /* 🔥 인터넷 화제성 */
+      document.getElementById("hotTopic").innerText =
+        `🔥 최근 7일 기준 화제 분석\n\n` +
+        `• 수집된 뉴스: ${newsCount}개\n` +
+        `• 경쟁도: ${d.data.competition}\n` +
+        `• 트렌드 점수: ${d.data.trendScore}\n\n` +
+        (d.data.competition >= 80
+          ? "⚠️ 현재 매우 높은 관심 키워드입니다."
+          : "ℹ️ 안정적인 관심 수준입니다.");
+
+      /* 📊 시장 구조 */
+      document.getElementById("marketAnalysis").innerText =
+        `📊 시장 구조 분석\n\n` +
+        `• 경쟁 수준: ${d.data.competition >= 70 ? "높음" : "보통"}\n` +
+        `• 진입 난이도: ${d.data.competition >= 85 ? "어려움" : "중간"}\n` +
+        `• 성장 가능성: ${d.data.trendScore >= 70 ? "높음" : "보통"}`;
     }
 
-    /* STREAM TEXT (리포트 복구 핵심) */
-    if(data.type === "chunk"){
-      document.getElementById("output").innerText += data.data;
+    /* STREAM REPORT */
+    if(d.type === "chunk"){
+      document.getElementById("output").innerText += d.data;
     }
 
-    /* ERROR */
-    if(data.type === "error"){
-      document.getElementById("output").innerText =
-        "⚠️ " + data.message;
+    if(d.type === "done"){
+      es.close();
     }
 
-    if(data.type === "done"){
-      eventSource.close();
+    if(d.type === "error"){
+      document.getElementById("output").innerText = "⚠️ " + d.message;
     }
+
   };
 
-  eventSource.onerror = ()=>{
-    document.getElementById("output").innerText =
-      "⚠️ 서버 연결 실패";
-    eventSource.close();
+  es.onerror = ()=>{
+    document.getElementById("output").innerText = "서버 연결 실패";
+    es.close();
   };
 }
 
