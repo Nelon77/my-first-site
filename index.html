@@ -23,20 +23,14 @@ body{
   padding:20px;
 }
 
-/* TITLE */
-h1{
-  text-align:center;
-  margin-bottom:10px;
-}
+h1{text-align:center;}
 
-/* SUBTITLE (요구사항 고정) */
 .subtitle{
   text-align:center;
   color:#aaa;
   margin-bottom:30px;
 }
 
-/* INPUT */
 .search-box{
   display:flex;
   gap:10px;
@@ -62,10 +56,9 @@ button{
   background:#0072ff;
   color:white;
   cursor:pointer;
-  font-weight:700;
 }
 
-/* GRID */
+/* CARD */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -73,7 +66,6 @@ button{
   display:none;
 }
 
-/* CARD */
 .card{
   background:#1a1d25;
   padding:18px;
@@ -82,7 +74,6 @@ button{
   display:none;
 }
 
-/* BAR */
 .bar{
   width:100%;
   height:12px;
@@ -97,10 +88,21 @@ button{
   transition:0.3s;
 }
 
-/* OUTPUT */
-.output{
-  white-space:pre-wrap;
-  line-height:1.6;
+/* 🔥 리포트 스타일 */
+.report-box{
+  line-height:1.7;
+  font-size:15px;
+}
+
+/* 파란 강조 */
+.blue{
+  color:#3b82f6;
+  font-weight:800;
+}
+
+.small{
+  opacity:0.8;
+  font-size:14px;
 }
 
 </style>
@@ -110,10 +112,8 @@ button{
 
 <div class="container">
 
-  <!-- 🔥 FIXED TITLE -->
   <h1>🧐 AI 키워드 검색·분석기</h1>
 
-  <!-- 🔥 FIXED SUBTITLE -->
   <p class="subtitle">
     최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다.
   </p>
@@ -140,20 +140,22 @@ button{
 
   </div>
 
-  <!-- CONTENT -->
+  <!-- INTERNET -->
   <div class="card" id="hotCard">
     <h3>📊 인터넷 화제성</h3>
     <div id="hotTopic"></div>
   </div>
 
+  <!-- MARKET -->
   <div class="card" id="marketCard">
     <h3>📊 시장 구조 분석</h3>
     <div id="marketAnalysis"></div>
   </div>
 
+  <!-- REPORT -->
   <div class="card" id="reportCard">
     <h3>🧠 AI 리포트</h3>
-    <div id="output" class="output"></div>
+    <div id="report" class="report-box"></div>
   </div>
 
 </div>
@@ -162,16 +164,46 @@ button{
 
 function animate(barId,textId,value){
   let cur=0;
-
   const bar=document.getElementById(barId);
   const text=document.getElementById(textId);
 
-  const timer=setInterval(()=>{
+  const t=setInterval(()=>{
     cur+=2;
-    if(cur>=value){cur=value;clearInterval(timer);}
+    if(cur>=value){cur=value;clearInterval(t);}
     bar.style.width=cur+"%";
     text.innerText=cur;
   },15);
+}
+
+function renderReport(data){
+
+  const keyword = data.keyword;
+  const intensity = data.intensity;
+  const competition = data.competition;
+  const trend = data.trendScore;
+  const news = data.newsCount;
+
+  document.getElementById("report").innerHTML = `
+    <div class="small">키워드 분석 결과</div>
+
+    <h2><span class="blue">${keyword}</span> 분석 리포트</h2>
+
+    <p>
+      현재 <span class="blue">${keyword}</span>는
+      <span class="blue">${intensity}</span> 구간에 위치해 있으며,
+      시장 반응은 <span class="blue">${competition >= 75 ? "강한 편" : "중간 수준"}</span>입니다.
+    </p>
+
+    <p>
+      트렌드 점수는 <span class="blue">${trend}</span>으로
+      ${trend > 70 ? "확산 속도가 빠르게 증가하는 흐름" : "완만한 변화 흐름"}을 보이고 있습니다.
+    </p>
+
+    <p>
+      최근 <span class="blue">${news}</span>개의 데이터가 확인되었으며,
+      이는 해당 키워드가 <span class="blue">${trend > 70 ? "주목 단계" : "관찰 단계"}</span>임을 의미합니다.
+    </p>
+  `;
 }
 
 async function startSearch(){
@@ -179,33 +211,30 @@ async function startSearch(){
   const keyword=document.getElementById("keyword").value;
   if(!keyword) return alert("키워드 입력");
 
-  // SHOW UI
   document.getElementById("dashboard").style.display="grid";
   document.getElementById("hotCard").style.display="block";
   document.getElementById("marketCard").style.display="block";
   document.getElementById("reportCard").style.display="block";
 
-  // LOADING
   document.getElementById("hotTopic").innerText="분석 중...";
   document.getElementById("marketAnalysis").innerText="분석 중...";
-  document.getElementById("output").innerText="분석 중...";
+  document.getElementById("report").innerText="분석 중...";
 
   try{
 
     const res = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
     const data = await res.json();
 
-    console.log(data);
-
     animate("competitionBar","competitionText",data.meta.competition);
     animate("trendBar","trendText",data.meta.trendScore);
 
     document.getElementById("hotTopic").innerText = data.hotTopic;
     document.getElementById("marketAnalysis").innerText = data.marketAnalysis;
-    document.getElementById("output").innerText = data.report;
+
+    renderReport(data.report);
 
   } catch(e){
-    document.getElementById("output").innerText="⚠️ 오류 발생";
+    document.getElementById("report").innerText="⚠️ 오류 발생";
   }
 }
 
