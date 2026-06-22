@@ -23,13 +23,11 @@ body{
   padding:20px;
 }
 
-/* TITLE */
 h1{
   text-align:center;
   margin-bottom:10px;
 }
 
-/* SUBTITLE (고정 요구) */
 .subtitle{
   text-align:center;
   color:#aaa;
@@ -82,36 +80,18 @@ button{
   display:none;
 }
 
-/* BAR */
-.bar{
-  width:100%;
-  height:12px;
-  background:#222;
-  border-radius:10px;
-  overflow:hidden;
-}
-
-.fill{
-  height:100%;
-  width:0%;
-  transition:0.3s;
-}
-
-/* REPORT */
-.report{
-  line-height:1.75;
-}
-
-.blue{
-  color:#3b82f6;
-  font-weight:800;
-}
-
+/* BOX */
 .box{
   margin-top:10px;
   padding:12px;
   background:#151925;
   border-radius:10px;
+  line-height:1.6;
+}
+
+.blue{
+  color:#3b82f6;
+  font-weight:800;
 }
 
 .small{
@@ -126,10 +106,8 @@ button{
 
 <div class="container">
 
-  <!-- TITLE (고정) -->
   <h1>🧐 AI 키워드 검색·분석기</h1>
 
-  <!-- SUBTITLE (고정) -->
   <p class="subtitle">
     최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다.
   </p>
@@ -169,7 +147,7 @@ button{
   <!-- REPORT -->
   <div class="card" id="reportCard">
     <h3>🧠 AI 리포트</h3>
-    <div id="report" class="report"></div>
+    <div id="report"></div>
   </div>
 
 </div>
@@ -178,76 +156,95 @@ button{
 
 async function startSearch(){
 
-  const keyword=document.getElementById("keyword").value;
-  if(!keyword) return alert("키워드 입력");
+  try {
 
-  // SHOW UI
-  document.getElementById("dashboard").style.display="grid";
-  document.getElementById("hotCard").style.display="block";
-  document.getElementById("marketCard").style.display="block";
-  document.getElementById("reportCard").style.display="block";
+    const keyword = document.getElementById("keyword").value;
 
-  try{
+    if(!keyword || !keyword.trim()){
+      alert("키워드를 입력하세요");
+      return;
+    }
+
+    // UI show
+    document.getElementById("dashboard").style.display = "grid";
+    document.getElementById("hotCard").style.display = "block";
+    document.getElementById("marketCard").style.display = "block";
+    document.getElementById("reportCard").style.display = "block";
 
     const res = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
     const data = await res.json();
 
-    // 📊 기본 출력
-    document.getElementById("competitionText").innerText = data.meta.competition;
-    document.getElementById("trendText").innerText = data.meta.trendScore;
+    console.log("DEBUG DATA:", data);
 
-    // 📊 인터넷 화제성
+    // 안전 출력
+    document.getElementById("competitionText").innerText = data.meta?.competition ?? 0;
+    document.getElementById("trendText").innerText = data.meta?.trendScore ?? 0;
+
+    // 📊 인터넷 화제성 (완전 안전)
+    const reasons = data.hotTopic?.reasons ?? [];
+
     document.getElementById("hotTopic").innerHTML = `
-      <div class="box"><b>요약:</b> ${data.hotTopic.summary}</div>
-
       <div class="box">
-        <b>이유:</b>
-        <ul>
-          ${data.hotTopic.reasons.map(r => `<li>${r}</li>`).join("")}
-        </ul>
+        <b>요약:</b><br>${data.hotTopic?.summary ?? "데이터 없음"}
       </div>
 
-      <div class="box"><b>판단:</b> ${data.hotTopic.insight}</div>
+      <div class="box">
+        <b>이유:</b><br>
+        ${reasons.length ? reasons.map(r => `• ${r}`).join("<br>") : "정보 없음"}
+      </div>
 
       <div class="box">
-        <b>7일 검색량:</b> <span class="blue">${data.meta.searchVolume7d.toLocaleString()}</span>
+        <b>판단:</b><br>${data.hotTopic?.insight ?? ""}
+      </div>
+
+      <div class="box">
+        <b>7일 검색량:</b> <span class="blue">${(data.meta?.searchVolume7d ?? 0).toLocaleString()}</span>
       </div>
     `;
 
     // 📊 시장 구조
     document.getElementById("marketAnalysis").innerHTML = `
-      <div class="box">${data.marketAnalysis.structure}</div>
-      <div class="box">${data.marketAnalysis.entry}</div>
-      <div class="box">${data.marketAnalysis.profit}</div>
+      <div class="box">${data.marketAnalysis?.structure ?? ""}</div>
+      <div class="box">${data.marketAnalysis?.entry ?? ""}</div>
+      <div class="box">${data.marketAnalysis?.profit ?? ""}</div>
     `;
 
-    // 🧠 AI 리포트 (강화 버전)
+    // 🧠 AI 리포트 (핵심 개선)
     document.getElementById("report").innerHTML = `
       <h2><span class="blue">${data.keyword}</span> 분석 리포트</h2>
 
       <div class="box">
-        <b>카테고리:</b> <span class="blue">${data.category}</span>
+        <b>카테고리:</b> <span class="blue">${data.meta?.category}</span>
       </div>
 
       <div class="box">
-        <b>트렌드 상태:</b> <span class="blue">${data.intensity}</span> / ${data.trendState}
+        <b>트렌드 상태:</b> <span class="blue">${data.meta?.intensity}</span>
+        / ${data.meta?.trendState}
       </div>
 
       <div class="box">
-        <b>핵심 분석:</b><br><br>
+        <b>감정 분석:</b> ${data.meta?.sentiment}
+      </div>
 
-        ${data.keyword}는 단순 검색어가 아니라<br>
-        <span class="blue">${data.category}</span> 영역에서 실제로 관심이 형성되는 주제입니다.<br><br>
+      <div class="box">
+        <b>핵심 AI 분석:</b><br><br>
 
-        현재 <span class="blue">${data.meta.searchVolume7d.toLocaleString()}</span>회의 검색량과<br>
-        <span class="blue">${data.meta.newsCount}</span>개의 뉴스/커뮤니티 언급이 발생하고 있으며,<br><br>
+        <span class="blue">${data.keyword}</span>는 단순 검색어가 아니라<br>
+        <b>실제 온라인 관심이 형성되고 있는 주제</b>입니다.<br><br>
 
-        이는 <span class="blue">${data.intensity}</span> 단계의 관심 흐름으로 판단됩니다.<br><br>
+        최근 <span class="blue">${data.meta?.searchVolume7d?.toLocaleString()}</span>회의 검색과<br>
+        <span class="blue">${data.meta?.newsCount}</span>개의 언급이 확인되며,<br><br>
 
-        특히 경쟁도 <span class="blue">${data.meta.competition}</span> 기준으로 볼 때<br>
-        ${data.meta.competition > 75 ? "이미 경쟁이 치열한 구조" : "아직 확장 가능한 구조"}입니다.
+        현재는 <span class="blue">${data.meta?.intensity}</span> 단계로 판단됩니다.<br><br>
+
+        시장에서는 <span class="blue">${data.meta?.trendState}</span> 흐름이며,<br>
+        경쟁 수준은 <span class="blue">${data.meta?.competition}</span>입니다.
       </div>
     `;
+
+  } catch (err) {
+    console.error(err);
+    alert("분석 실패 (콘솔 확인)");
   }
 }
 
