@@ -23,14 +23,20 @@ body{
   padding:20px;
 }
 
-h1{text-align:center;}
+/* TITLE */
+h1{
+  text-align:center;
+  margin-bottom:10px;
+}
 
+/* SUBTITLE */
 .subtitle{
   text-align:center;
   color:#aaa;
   margin-bottom:30px;
 }
 
+/* INPUT */
 .search-box{
   display:flex;
   gap:10px;
@@ -56,9 +62,10 @@ button{
   background:#0072ff;
   color:white;
   cursor:pointer;
+  font-weight:700;
 }
 
-/* CARD */
+/* GRID */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -66,6 +73,7 @@ button{
   display:none;
 }
 
+/* CARD */
 .card{
   background:#1a1d25;
   padding:18px;
@@ -74,6 +82,7 @@ button{
   display:none;
 }
 
+/* BAR */
 .bar{
   width:100%;
   height:12px;
@@ -88,21 +97,20 @@ button{
   transition:0.3s;
 }
 
-/* 🔥 리포트 스타일 */
-.report-box{
+/* REPORT */
+.report{
   line-height:1.7;
   font-size:15px;
 }
 
-/* 파란 강조 */
 .blue{
   color:#3b82f6;
   font-weight:800;
 }
 
 .small{
-  opacity:0.8;
-  font-size:14px;
+  opacity:0.7;
+  font-size:13px;
 }
 
 </style>
@@ -112,8 +120,10 @@ button{
 
 <div class="container">
 
+  <!-- TITLE (고정) -->
   <h1>🧐 AI 키워드 검색·분석기</h1>
 
+  <!-- SUBTITLE (고정) -->
   <p class="subtitle">
     최근 7일간 뉴스·SNS·커뮤니티 데이터를 AI가 분석합니다.
   </p>
@@ -140,7 +150,7 @@ button{
 
   </div>
 
-  <!-- INTERNET -->
+  <!-- HOT -->
   <div class="card" id="hotCard">
     <h3>📊 인터넷 화제성</h3>
     <div id="hotTopic"></div>
@@ -155,7 +165,7 @@ button{
   <!-- REPORT -->
   <div class="card" id="reportCard">
     <h3>🧠 AI 리포트</h3>
-    <div id="report" class="report-box"></div>
+    <div id="report" class="report"></div>
   </div>
 
 </div>
@@ -177,31 +187,30 @@ function animate(barId,textId,value){
 
 function renderReport(data){
 
-  const keyword = data.keyword;
-  const intensity = data.intensity;
-  const competition = data.competition;
-  const trend = data.trendScore;
-  const news = data.newsCount;
-
   document.getElementById("report").innerHTML = `
-    <div class="small">키워드 분석 결과</div>
+    <div class="small">AI 키워드 분석 리포트</div>
 
-    <h2><span class="blue">${keyword}</span> 분석 리포트</h2>
+    <h2><span class="blue">${data.keyword}</span> 분석 결과</h2>
 
     <p>
-      현재 <span class="blue">${keyword}</span>는
-      <span class="blue">${intensity}</span> 구간에 위치해 있으며,
-      시장 반응은 <span class="blue">${competition >= 75 ? "강한 편" : "중간 수준"}</span>입니다.
+      현재 <span class="blue">${data.keyword}</span>는
+      <span class="blue">${data.intensity}</span> 상태이며,
+      시장 반응은 <span class="blue">${data.trendState}</span> 흐름을 보이고 있습니다.
     </p>
 
     <p>
-      트렌드 점수는 <span class="blue">${trend}</span>으로
-      ${trend > 70 ? "확산 속도가 빠르게 증가하는 흐름" : "완만한 변화 흐름"}을 보이고 있습니다.
+      경쟁도는 <span class="blue">${data.competition}</span> 수준으로
+      ${data.competition > 75 ? "높은 경쟁 환경" : "진입 가능한 수준"}입니다.
     </p>
 
     <p>
-      최근 <span class="blue">${news}</span>개의 데이터가 확인되었으며,
-      이는 해당 키워드가 <span class="blue">${trend > 70 ? "주목 단계" : "관찰 단계"}</span>임을 의미합니다.
+      트렌드 점수는 <span class="blue">${data.trendScore}</span>이며,
+      ${data.trendScore > 70 ? "확산 속도가 빠른 키워드" : "완만한 변화 흐름"}입니다.
+    </p>
+
+    <p>
+      최근 <span class="blue">${data.newsCount}</span>개의 데이터가 확인되며
+      현재는 <span class="blue">${data.opportunity}</span> 단계로 판단됩니다.
     </p>
   `;
 }
