@@ -7,7 +7,6 @@
 <title>🧐 AI 키워드 분석기</title>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
 
@@ -24,7 +23,6 @@ body{
   padding:20px;
 }
 
-/* HEADER */
 h1{
   text-align:center;
   margin-bottom:10px;
@@ -36,7 +34,7 @@ h1{
   margin-bottom:30px;
 }
 
-/* SEARCH */
+/* INPUT */
 .search-box{
   display:flex;
   gap:10px;
@@ -50,7 +48,6 @@ input{
   border:none;
   background:#1a1d25;
   color:white;
-
   font-weight:900;
   font-size:20px;
   text-align:center;
@@ -66,7 +63,7 @@ button{
   font-weight:700;
 }
 
-/* GRID */
+/* DASHBOARD */
 .grid{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -74,7 +71,6 @@ button{
   display:none;
 }
 
-/* CARD */
 .card{
   background:#1a1d25;
   padding:18px;
@@ -101,13 +97,7 @@ button{
 /* OUTPUT */
 .output{
   white-space:pre-wrap;
-  line-height:1.7;
-  min-height:120px;
-}
-
-canvas{
-  width:100% !important;
-  max-height:300px;
+  line-height:1.6;
 }
 
 </style>
@@ -124,7 +114,7 @@ canvas{
   </p>
 
   <div class="search-box">
-    <input id="keyword" placeholder="" />
+    <input id="keyword" placeholder="키워드 입력" />
     <button onclick="startSearch()">분석</button>
   </div>
 
@@ -145,19 +135,19 @@ canvas{
 
   </div>
 
-  <!-- 1. 인터넷 화제성 -->
+  <!-- 📊 인터넷 화제성 -->
   <div class="card" id="hotCard">
     <h3>📊 인터넷 화제성</h3>
     <div id="hotTopic"></div>
   </div>
 
-  <!-- 2. 시장 구조 -->
+  <!-- 📊 시장 구조 -->
   <div class="card" id="marketCard">
     <h3>📊 시장 구조 분석</h3>
     <div id="marketAnalysis"></div>
   </div>
 
-  <!-- 3. AI 리포트 -->
+  <!-- 🧠 AI 리포트 -->
   <div class="card" id="reportCard">
     <h3>🧠 AI 리포트 분석</h3>
     <div id="output" class="output"></div>
@@ -167,96 +157,49 @@ canvas{
 
 <script>
 
-function getColor(v){
-  if(v >= 80) return "#ff3b3b";
-  if(v >= 50) return "#ffb020";
-  return "#2ecc71";
+function animate(barId,textId,value){
+  let cur=0;
+
+  const bar=document.getElementById(barId);
+  const text=document.getElementById(textId);
+
+  const t=setInterval(()=>{
+    cur+=2;
+    if(cur>=value){cur=value;clearInterval(t);}
+    bar.style.width=cur+"%";
+    text.innerText=cur;
+  },15);
 }
 
-function animateGauge(barId, textId, value){
-  let cur = 0;
-  const bar = document.getElementById(barId);
-  const text = document.getElementById(textId);
+async function startSearch(){
 
-  const t = setInterval(()=>{
-    cur += 2;
-    if(cur >= value){
-      cur = value;
-      clearInterval(t);
-    }
+  const keyword=document.getElementById("keyword").value;
+  if(!keyword) return alert("키워드 입력");
 
-    bar.style.width = cur + "%";
-    bar.style.background = getColor(cur);
-    text.innerText = cur;
-  }, 15);
-}
+  document.getElementById("dashboard").style.display="grid";
+  document.getElementById("hotCard").style.display="block";
+  document.getElementById("marketCard").style.display="block";
+  document.getElementById("reportCard").style.display="block";
 
-function startSearch(){
+  document.getElementById("hotTopic").innerText="분석 중...";
+  document.getElementById("marketAnalysis").innerText="분석 중...";
+  document.getElementById("output").innerText="분석 중...";
 
-  const keyword = document.getElementById("keyword").value;
-  if(!keyword) return alert("키워드를 입력하세요");
+  try{
 
-  /* UI 표시 */
-  document.getElementById("dashboard").style.display = "grid";
-  document.getElementById("hotCard").style.display = "block";
-  document.getElementById("marketCard").style.display = "block";
-  document.getElementById("reportCard").style.display = "block";
+    const res = await fetch(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
+    const data = await res.json();
 
-  document.getElementById("output").innerText = "";
-  document.getElementById("hotTopic").innerText = "";
-  document.getElementById("marketAnalysis").innerText = "";
+    animate("competitionBar","competitionText",data.meta.competition);
+    animate("trendBar","trendText",data.meta.trendScore);
 
-  const es = new EventSource(`/api/analyze?keyword=${encodeURIComponent(keyword)}`);
+    document.getElementById("hotTopic").innerText = data.hotTopic;
+    document.getElementById("marketAnalysis").innerText = data.marketAnalysis;
+    document.getElementById("output").innerText = data.report;
 
-  es.onmessage = (e)=>{
-
-    const d = JSON.parse(e.data);
-
-    /* META */
-    if(d.type === "meta"){
-
-      animateGauge("competitionBar","competitionText",d.data.competition);
-      animateGauge("trendBar","trendText",d.data.trendScore);
-
-      const newsCount = d.data.newsCount || 0;
-
-      /* 🔥 인터넷 화제성 */
-      document.getElementById("hotTopic").innerText =
-        `🔥 최근 7일 기준 화제 분석\n\n` +
-        `• 수집된 뉴스: ${newsCount}개\n` +
-        `• 경쟁도: ${d.data.competition}\n` +
-        `• 트렌드 점수: ${d.data.trendScore}\n\n` +
-        (d.data.competition >= 80
-          ? "⚠️ 현재 매우 높은 관심 키워드입니다."
-          : "ℹ️ 안정적인 관심 수준입니다.");
-
-      /* 📊 시장 구조 */
-      document.getElementById("marketAnalysis").innerText =
-        `📊 시장 구조 분석\n\n` +
-        `• 경쟁 수준: ${d.data.competition >= 70 ? "높음" : "보통"}\n` +
-        `• 진입 난이도: ${d.data.competition >= 85 ? "어려움" : "중간"}\n` +
-        `• 성장 가능성: ${d.data.trendScore >= 70 ? "높음" : "보통"}`;
-    }
-
-    /* STREAM REPORT */
-    if(d.type === "chunk"){
-      document.getElementById("output").innerText += d.data;
-    }
-
-    if(d.type === "done"){
-      es.close();
-    }
-
-    if(d.type === "error"){
-      document.getElementById("output").innerText = "⚠️ " + d.message;
-    }
-
-  };
-
-  es.onerror = ()=>{
-    document.getElementById("output").innerText = "서버 연결 실패";
-    es.close();
-  };
+  } catch(e){
+    document.getElementById("output").innerText = "⚠️ 서버 오류";
+  }
 }
 
 </script>
